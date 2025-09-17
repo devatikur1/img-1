@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body, html {
+  overflow: hidden;
+}
+
+.animateSpin {
+  animation: spin 2.1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.home {
+  color: #fff;
+}
+
+
+.scroll-area::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+
+.scroll-area::-webkit-scrollbar-track {
+  background: rgba(148, 163, 184, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  margin: 0 10px;
+}
+
+.scroll-area::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.scroll-area::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+
+
+/* .scroll-area-body::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+
+.scroll-area-body::-webkit-scrollbar-track {
+  background: rgba(148, 163, 184, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  margin: 0 10px;
+}
+
+.scroll-area-body::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 6px;
+  transition: all 0.2s;
+}scroll-area-body::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+} */
+
