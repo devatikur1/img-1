@@ -3,27 +3,32 @@ import React, { useContext, useEffect, useRef, useState } from "react";
 import { Bounce, toast, ToastContainer } from "react-toastify";
 import { FirebaseContext } from "../contexts/FirebaseContext";
 import google from "../assets/google.png";
+import clsx from "clsx";
 
 export default function SignUpPages() {
   const signBtn = useRef(null);
-
   const [err, setErr] = useState(false);
+
+  // all input
   const [fullName, setFullName] = useState("");
-  const [errFullName, setErrFullName] = useState(false);
   const [username, setUsername] = useState("");
-  const [errUsername, setErrUsername] = useState(false);
   const [email, setEmail] = useState("");
-  const [errEmail, setErrEmail] = useState(false);
   const [password, setPassword] = useState("");
-  const [errPassword, setErrPassword] = useState(false);
-  const [showPass, setShowPass] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [errConfirmPassword, setErrConfirmPassword] = useState(false);
+
+  // password show funtion
+  const [showPass, setShowPass] = useState(false);
   const [showConfirmPass, setShowConfirmPass] = useState(false);
+
+  // from err input
+  const [errFullName, setErrFullName] = useState(false);
+  const [errUsername, setErrUsername] = useState(false);
+  const [errEmail, setErrEmail] = useState(false);
+  const [errPassword, setErrPassword] = useState(false);
+  const [errConfirmPassword, setErrConfirmPassword] = useState(false);
 
   const { userAuth } = useContext(FirebaseContext);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const passRules = [
     {
       text: "At least 8 characters",
@@ -59,7 +64,7 @@ export default function SignUpPages() {
     }
 
     // Email Validation
-    if (email !== "" && !email.includes("@")) {
+    if (email !== "" && !email.includes("@gmail.com")) {
       setErrEmail(true);
     } else {
       setErrEmail(false);
@@ -78,39 +83,37 @@ export default function SignUpPages() {
     } else {
       setErrConfirmPassword(false);
     }
-    if (
-      !(
-        (fullName === "" && username === "" && email === "") ||
-        (passRules.some((rule) => rule.isValid === false) &&
-          password !== confirmPassword)
-      )
-    ) {
+
+    let nameRequired = fullName !== "";
+    let userNameRequired = username !== "";
+    let emailRequired = (email !== "" && email.includes("@gmail.com"));
+    let mainPassRequired = (passRules.some((rule) => rule.isValid === true) && password === confirmPassword);
+
+    if (nameRequired && userNameRequired && emailRequired && mainPassRequired) {
       signBtn.current.disabled = false;
+    } else if(fullName === "" || username === "" || email === "" || email.includes("@gmail.com") || passRules.some((rule) => rule.isValid === false || password !== confirmPassword)) {
+      signBtn.current.disabled = true;
     }
-  }, [fullName, username, email, password, confirmPassword, passRules]);
+  }, [fullName, username, email, password, confirmPassword]);
 
   function HandleLoginSubmit(e) {
     e.preventDefault();
+
     // Overall Error
-    if (
-      fullName == "" ||
-      username == "" ||
-      (email == "" && !email.includes("@")) ||
-      (password == "" && passRules.some((rule) => rule.isValid == false)) ||
-      password !== confirmPassword
-    ) {
+    if(fullName === "" || username === "" || email === "" || email.includes("@gmail.com") || passRules.some((rule) => rule.isValid === false || password !== confirmPassword)) {
       setErrFullName(fullName === "");
       setErrUsername(username === "");
-      setErrEmail(email == "" && !email.includes("@"));
+      setErrEmail(email == "" || !email.includes("@gmail.com"));
       setErrPassword(
-        password == "" && passRules.some((rule) => rule.isValid == false)
+        password == "" || passRules.some((rule) => rule.isValid == false)
       );
       setErrConfirmPassword(
-        confirmPassword !== "" && confirmPassword !== password
+        confirmPassword !== "" || confirmPassword !== password
       );
       setErr(true);
-    } else {
-      setErr(false);
+      signBtn.current.disabled = true;
+      toast.error("Invalid Form")
+      return;
     }
 
     console.log(
@@ -120,31 +123,19 @@ export default function SignUpPages() {
         passRules.some((rule) => rule.isValid === false) ||
         password !== confirmPassword
     );
+
     console.log(err);
 
-    if (
-      fullName === "" ||
-      username === "" ||
-      email === "" ||
-      passRules.some((rule) => rule.isValid === false) ||
-      password !== confirmPassword
-    ) {
-      signBtn.current.disabled = true;
-      setErr(true);
-      toast.error("Invalid Form");
-      return;
-    }
     signBtn.current.disabled = false;
     setErr(false);
     let signInRes = userAuth.useSignIn(email, password);
     console.log(signInRes);
     if (signInRes == "error") {
       setErr(true);
-      toast.error("Invalid Form");
+      toast.error("Please type your Info");
       return;
     } else {
-      console.log(userAuth.useSignIn(email, password));
-      console.log("Signup data:", { fullName, username, email, password });
+      console.log("Signup");
       toast.success("Account Created Successfully!");
     }
   }
@@ -160,22 +151,24 @@ export default function SignUpPages() {
           <input
             onChange={(e) => setFullName(e.target.value)}
             value={fullName}
-            className={`w-full ring-2 ${
-              errFullName
-                ? "ring-red-400 text-red-500"
-                : "ring-[#61DBFB] text-black"
-            } text-black text-xl px-3 py-2 rounded-lg border-none outline-none`}
+            className={clsx(
+              "w-full ring-2",
+              errFullName && "ring-red-400 text-red-500",
+              !errFullName && "ring-[#61DBFB] text-black",
+              "text-black text-xl px-3 py-2 rounded-lg border-none outline-none"
+            )}
             type="text"
             placeholder="Full Name..."
           />
           <input
             onChange={(e) => setUsername(e.target.value.toLowerCase().trim())}
             value={username}
-            className={`w-full ring-2 ${
-              errUsername
-                ? "ring-red-400 text-red-500"
-                : "ring-[#61DBFB] text-black"
-            } text-black text-xl px-3 py-2 rounded-lg border-none outline-none`}
+            className={clsx(
+              "w-full ring-2",
+              errUsername && "ring-red-400 text-red-500",
+              !errUsername && "ring-[#61DBFB] text-black",
+              "text-black text-xl px-3 py-2 rounded-lg border-none outline-none"
+            )}
             type="text"
             placeholder="Username..."
           />
@@ -183,9 +176,12 @@ export default function SignUpPages() {
         <input
           onChange={(e) => setEmail(e.target.value.toLowerCase().trim())}
           value={email}
-          className={`w-full ring-2 ${
-            errEmail ? "ring-red-400 text-red-500" : "ring-[#61DBFB] text-black"
-          } text-black text-xl px-3 py-2 rounded-lg border-none outline-none`}
+          className={clsx(
+            "w-full ring-2",
+            errEmail && "ring-red-400 text-red-500",
+            !errEmail && "ring-[#61DBFB] text-black",
+            "text-black text-xl px-3 py-2 rounded-lg border-none outline-none"
+          )}
           type="email"
           placeholder="Email..."
         />
@@ -194,11 +190,12 @@ export default function SignUpPages() {
             <input
               onChange={(e) => setPassword(e.target.value.trim())}
               value={password}
-              className={`w-full ring-2 ${
-                errPassword
-                  ? "ring-red-400 text-red-500"
-                  : "ring-[#61DBFB] text-black"
-              } text-xl px-3 pr-[35px] py-2 rounded-lg border-none outline-none`}
+              className={clsx(
+                "w-full ring-2",
+                errPassword && "ring-red-400 text-red-500",
+                !errPassword && "ring-[#61DBFB] text-black",
+                "text-black text-xl px-3 py-2 rounded-lg border-none outline-none"
+              )}
               type={showPass ? "text" : "password"}
               placeholder="Password..."
             />
@@ -210,8 +207,12 @@ export default function SignUpPages() {
             </div>
           </div>
 
+          {/* password ruls */}
           <article
-            className={`${errPassword ? "flex flex-col gap-[6px]" : "hidden"}`}
+            className={clsx(
+              errPassword && "flex flex-col gap-[6px]",
+              !errConfirmPassword && "hidden"
+            )}
           >
             {passRules.map((passRule, id) => (
               <div key={id} className="flex items-center gap-[8px]">
@@ -245,15 +246,17 @@ export default function SignUpPages() {
             ))}
           </article>
 
+          {/* confrimpass */}
           <div className="w-full relative">
             <input
               onChange={(e) => setConfirmPassword(e.target.value)}
               value={confirmPassword}
-              className={`w-full ring-2 ${
-                errConfirmPassword
-                  ? "ring-red-400 text-red-500"
-                  : "ring-[#61DBFB] text-black"
-              } text-xl px-3 pr-[35px] py-2 rounded-lg border-none outline-none`}
+              className={clsx(
+                "w-full ring-2",
+                errConfirmPassword && "ring-red-400 text-red-500",
+                !errConfirmPassword && "ring-[#61DBFB] text-black",
+                "text-black text-xl px-3 py-2 rounded-lg border-none outline-none"
+              )}
               type={showConfirmPass ? "text" : "password"}
               placeholder="Confirm Password..."
             />

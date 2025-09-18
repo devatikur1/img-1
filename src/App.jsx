@@ -1,34 +1,40 @@
 import React, { useContext } from "react";
-import Header from "./components/Header/Header";
+import { createBrowserRouter, createRoutesFromElements, Navigate, Route, RouterProvider } from "react-router-dom";
+import { FirebaseContext } from "./contexts/FirebaseContext";
+import HomePage from "./Pages/HomePage";
 import LoginPage from "./Pages/LoginPage";
 import SignUpPages from "./Pages/SignUpPages";
-import HomePage from "./Pages/HomePage";
-import { Navigate, Route, Routes } from "react-router-dom";
-import { FirebaseContext } from "./contexts/FirebaseContext";
-import SearchBox from "./components/SearchBox/SearchBox";
+import RootLayout from "./Layout/RootLayout";
 
 
 export default function App() {
   const { currentUser } = useContext(FirebaseContext);
-  // console.log(currentUser);
+  console.log(currentUser);
 
-  return (
-    <div className="flex flex-col overflow-hidden">
-      <Header />
-      <SearchBox />
-      <Routes>
-        <Route
-          path="/login"
-          element={!currentUser ? <LoginPage /> : <Navigate to={"/"} replace />}
+  const router = createBrowserRouter(
+    createRoutesFromElements(
+      <Route path="/" element={<RootLayout />}>
+        <Route 
+        index 
+        element={<HomePage /> }
         />
         <Route
-          path="/register"
+          path="login"
           element={
-            !currentUser ? <SignUpPages /> : <Navigate to={"/"} replace />
+            !currentUser ? <LoginPage /> : <Navigate index replace />
           }
         />
-        <Route path="/" element={<HomePage />} />
-      </Routes>
-    </div>
+        <Route
+          path="register"
+          element={
+            !currentUser ? <SignUpPages /> : <Navigate index replace />
+          }
+        />
+      </Route>
+    )
+  )
+
+  return (
+      <RouterProvider router={router}/>
   );
 }

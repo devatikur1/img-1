@@ -3,21 +3,36 @@ import React, { useContext, useState } from "react";
 import { Bounce, toast, ToastContainer } from "react-toastify";
 import google from "../assets/google.png";
 import { FirebaseContext } from "../contexts/FirebaseContext";
+import clsx from "clsx";
 
 export default function LoginPage() {
   const [err, setErr] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const [password, setPassword] = useState("");
+  const [errPassword, setErrPassword] = useState(false);
   const [email, setEmail] = useState("");
+  const [errEmail, setErrEmail] = useState(false);
 
   const { userAuth } = useContext(FirebaseContext);
 
   async function HandleLoginSubmit(e) {
     e.preventDefault();
 
-    if (!email || !password) {
+    if (!email && !password) {
       setErr(true);
-      toast.error("Email এবং Password লাগবে!");
+      toast.error("Please complete Email & Password !");
+      return;
+    }
+
+    if (!email) {
+      setErrEmail(true);
+      toast.error("Please complete Email !");
+      return;
+    }
+
+    if (!password) {
+      setErrPassword(true);
+      toast.error("Please complete Password !");
       return;
     }
 
@@ -25,6 +40,8 @@ export default function LoginPage() {
 
     try {
       const res = await userAuth.useLogin(email, password);
+      console.log(res);
+      
       if (res !== "error") {
         toast.success("Login Successful!");
         console.log("Logged in user:", res);
@@ -41,15 +58,24 @@ export default function LoginPage() {
     <section className="w-full h-screen flex justify-center items-center">
       <form
         onSubmit={(e) => HandleLoginSubmit(e)}
-        className="relative z-20 w-[98%] md:w-[60%] lg:w-[50%] xl:w-[40%] 2xl:w-[30%] flex flex-col items-center gap-3 justify-center px-10 py-10 bg-black/10 backdrop-blur-2xl text-white border-[1px] border-slate-50/20 outline-none rounded-xl"
+        className={
+          clsx(
+            "relative z-20 w-[98%] md:w-[60%] lg:w-[50%] xl:w-[40%] 2xl:w-[30%] flex flex-col items-center gap-3 justify-center px-10 py-10 bg-black/10 backdrop-blur-2xl text-white border-[1px] outline-none rounded-xl",
+            err && "border-slate-50/20",
+            !err && "border-red-500",
+          )
+        }
       >
         <h1 className="text-4xl mb-[20px] font-semibold">Login Now</h1>
         <input
           onChange={(e) => setEmail(e.target.value)}
           value={email}
-          className={`w-full ring-2 ${
-            err ? "ring-red-400 text-red-500" : "ring-[#61DBFB] text-black"
-          } text-black text-xl px-3 py-2 rounded-lg border-none outline-none`}
+          className={clsx(
+            "w-full ring-2",
+            errEmail && "ring-red-400 text-red-500",
+            !errEmail && "ring-[#61DBFB] text-black",
+            "text-black text-xl px-3 py-2 rounded-lg border-none outline-none"
+          )}
           type="email"
           placeholder="Email..."
         />
@@ -57,9 +83,12 @@ export default function LoginPage() {
           <input
             onChange={(e) => setPassword(e.target.value)}
             value={password}
-            className={`w-full ring-2 ${
-              err ? "ring-red-400 text-red-500" : "ring-[#61DBFB] text-black"
-            } text-xl px-3 pr-[35px] py-2 rounded-lg border-none outline-none`}
+            className={clsx(
+              "w-full ring-2",
+              errPassword && "ring-red-400 text-red-500",
+              !errPassword && "ring-[#61DBFB] text-black",
+              "text-black text-xl px-3 py-2 rounded-lg border-none outline-none"
+            )}
             type={showPass ? "text" : "password"}
             placeholder="Password..."
           />
@@ -72,9 +101,11 @@ export default function LoginPage() {
         </div>
         <div className="w-full flex justify-center items-center">
           <button
-            className={`${
-              err ? "bg-red-400" : "bg-[#61DBFB] text-gray-950"
-            } w-[60%] px-3 py-2 text-xl rounded-lg font-semibold`}
+            className={clsx(
+              err && "bg-red-400",
+              !err && "bg-[#61DBFB] text-gray-950",
+             "w-[60%] px-3 py-2 text-xl rounded-lg font-semibold"
+            )}
             type="submit"
           >
             Login

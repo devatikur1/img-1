@@ -1,4 +1,4 @@
-import { CloudUpload, ImagePlus, ImagePlusIcon, Loader2 } from "lucide-react";
+import { CloudUpload, Loader, Plus } from "lucide-react";
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { FirebaseContext } from "../contexts/FirebaseContext";
 
@@ -7,31 +7,34 @@ import useLocomotiveScroll from "../utils/useLocomotiveScroll";
 
 export default function HomePage() {
   const upBox = useRef(null);
-  const [IsDrop, setIsDrop] = useState(false);
+  const [IsDrag, setIsDrag] = useState(false);
   const {
-    currentUser,
-    images,
-    searchBoxShowing,
-    setSearchBoxShowing,
-    setupimageLinks,
-    setUpData,
+    currentUser, // logged user
+    images, // images in database
 
-    uploading,
+    setIsUserUploadingImage,  // uploaded funtion
+    setupimages, // users uploaded image data sate funtion
+
+    setUserLoggedData, // login user data
+    uploading, // user uploading image ?? check this data
   } = useContext(FirebaseContext);
 
+  // Drag Over
   function handleDragOver(e) {
     e.preventDefault();
     upBox.current.classList.add("border-slate-500");
     upBox.current.classList.remove("border-slate-700");
-    setIsDrop(true);
+    setIsDrag(true);
   }
 
+  // Drag leave
   function handleDragLeave() {
     upBox.current.classList.remove("border-slate-500");
     upBox.current.classList.add("border-slate-700");
-    setIsDrop(false);
+    setIsDrag(false);
   }
 
+  // Drop image
   function handleDrop(e) {
     e.preventDefault();
     upBox.current.classList.remove("border-blue-400");
@@ -41,11 +44,13 @@ export default function HomePage() {
     handleFiles(files);
   }
 
+  // file uploaded images
   function handleFileInput(e) {
     const files = e.target.files;
     handleFiles(files);
   }
 
+  // share data in upload box
   async function handleFiles(files) {
     const currentUserData = currentUser.reloadUserInfo;
 
@@ -55,10 +60,14 @@ export default function HomePage() {
       rawFile: file,
     }));
 
-    setSearchBoxShowing(true);
-    setupimageLinks(filesArr);
-    setUpData(currentUserData);
+    console.log(filesArr);
+
+    setIsUserUploadingImage(true);
+    setupimages(filesArr);
+    setUserLoggedData(currentUserData);
   }
+
+
 
   // Hook থেকে ref আর instance নাও
   const { containerRef, scrollInstance } = useLocomotiveScroll({
@@ -132,13 +141,11 @@ export default function HomePage() {
       <div style={{ paddingBottom: "20px" }} className="w-full">
         {uploading ? (
           <section
-            className={`mt-20 w-full h-[250px] flex flex-col items-center gap-6 justify-center  ${
-              images ? "absolute top-[50] bottom-[50]" : ""
-            }`}
+            className="mt-20 w-full h-[250px] flex flex-col items-center gap-6 justify-center"
           >
             <div className="bg-slate-800/70 border-slate-700 w-[90%] xl:w-[40%] mt-20 h-[250px] flex flex-col justify-center items-center gap-[10px] border-dashed border-[2px] border-slate-50/60 rounded-xl py-40 transition-colors duration-200 overflow-hidden">
               <div className="w-full h-full flex justify-center items-center">
-                <Loader2 className="animate-spin" size={140} />
+                <Loader className="animate-spin" size={140} />
               </div>
             </div>
           </section>
@@ -151,7 +158,7 @@ export default function HomePage() {
               ref={upBox}
               className="bg-slate-800/70 border-slate-700 w-[90%] xl:w-[40%] mt-20 h-[250px] flex flex-col justify-center items-center gap-[10px] border-dashed border-[2px] border-slate-50/60 rounded-xl py-40 transition-colors duration-200 overflow-hidden"
             >
-              {IsDrop == false && (
+              {!IsDrag && (
                 <>
                   <label
                     htmlFor="uploadFrom"
@@ -180,16 +187,16 @@ export default function HomePage() {
                   </div>
                 </>
               )}
-              {IsDrop == true && (
+              {IsDrop && (
                 <div className="flex flex-col justify-center items-center gap-2">
-                  <ImagePlusIcon size={120} />
-                  <h1 className="text-[1.2rem] lg:text-xl">Drop Here !</h1>
+                  <Plus size={120} />
                 </div>
               )}
             </div>
           </section>
         )}
       </div>
+
     </div>
   );
 }
