@@ -5,7 +5,7 @@ import HomePage from "./Pages/HomePage";
 import LoginPage from "./Pages/LoginPage";
 import SignUpPages from "./Pages/SignUpPages";
 import RootLayout from "./Layout/RootLayout";
-import ErrorPage from "./Pages/errorPage";
+import ErrorPage from "./Pages/ErrorPage";
 
 
 export default function App() {
