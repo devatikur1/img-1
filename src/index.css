@@ -48,25 +48,62 @@ body, html {
   transition: all 0.2s;
 }
 
-
-
-/* .scroll-area-body::-webkit-scrollbar {
-  height: 6px;
-  width: 6px;
+.userInfo {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
-.scroll-area-body::-webkit-scrollbar-track {
-  background: rgba(148, 163, 184, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 6px;
-  margin: 0 10px;
+.userInfo.show { /* যখন hover বা active */
+  opacity: 1;
+  visibility: visible;
 }
 
-.scroll-area-body::-webkit-scrollbar-thumb {
-  background: #475569;
-  border-radius: 6px;
-  transition: all 0.2s;
-}scroll-area-body::-webkit-scrollbar-thumb:hover {
-  background: #64748b;
-} */
+.parent_optionBox {
+  transition: all 0.3s ease;
+}
+.parent_optionBox .optionBox{
+  display: none;
+  transition: all 0.3s ease;
+}
 
+.parent_optionBox:hover .optionBox {
+  display: flex;
+}
+
+
+div img.profilePic {
+  transition: transform 0.3s ease;
+}
+
+div img.profilePic:hover {
+  transform: scale(1.1);
+}
+
+.options {
+  height: 0px;
+  overflow: hidden;
+  padding: 0;
+  transition: all 0.3s ease;
+}
+
+a {
+  position: relative;
+  text-decoration: none;
+  color: inherit;
+}
+
+a::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0%;
+  height: 1.5px;
+  background-color: #61DBFB;
+  transition: width 0.3s ease;
+}
+
+a.active::after {
+  width: 100%;
+}

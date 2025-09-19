@@ -9,7 +9,7 @@ import RootLayout from "./Layout/RootLayout";
 
 export default function App() {
   const { currentUser } = useContext(FirebaseContext);
-  console.log(currentUser);
+  // console.log(currentUser);
 
   const router = createBrowserRouter(
     createRoutesFromElements(

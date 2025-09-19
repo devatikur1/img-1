@@ -1,35 +1,40 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { FirebaseContext } from "../../contexts/FirebaseContext";
-import { CloudUpload, ImagePlusIcon, Loader2Icon, X } from "lucide-react";
+import { CloudUpload, Loader2Icon, X } from "lucide-react";
 import { serverTimestamp } from "firebase/firestore";
-import { handleUploadConvartToLink } from "../../utils/useAddImageInStorafe";
+import clsx from "clsx";
 
-export default function SearchBox() {
+export default function UploadBox() {
   const upBox = useRef(null);
   const {
-    searchBoxShowing,
-    setSearchBoxShowing,
-    upimageLinks,
-    setupimageLinks,
-    upData,
+    currentUser,
 
-    dataStore,
+    isUserUploadingImage,  // uploaded data
+    setIsUserUploadingImage,  // uploaded funtion
 
-    setUploading,
+    upimages, // users uploaded image data sate data
+    setupimages, // users uploaded image data sate funtion
 
-    setupsateData,
+    dataStore, // store data
+
+    uploading, // user uploading image ?? check this data
+    setUploading, // user uploading image ?? check  funtion
+
+    setupdateData,
+    setUserLoggedData,
+
+    useAddImageInStorafe
   } = useContext(FirebaseContext);
 
-  const [btnLoading, setBtnLoading] = useState(false);
 
   const [err, setErr] = useState(false);
-  const [linkMap, setLinkMap] = useState([]);
+  const [submitImage, setSubmitImage] = useState([]);
   const [title, setTitle] = useState("");
   const [tags, setTags] = useState([]);
   const [satus, setSatus] = useState("");
   const [des, setDes] = useState("");
 
-  const [IsDrop, setIsDrop] = useState(false);
+  const [IsDrag, setIsDrag] = useState(false);
 
   // submit Data in database
   async function handleSubmit(e) {
@@ -39,22 +44,21 @@ export default function SearchBox() {
       title &&
       satus &&
       des &&
-      upData &&
-      linkMap.length > 0
+      upimages &&
+      upimages.length > 0
     ) {
       setUploading(true);
-      setBtnLoading(true);
 
-      const promises = upimageLinks.map(async (link) => {
+      const promises = upimages.map(async (link) => {
         console.log(link);
 
-        const newImag = await handleUploadConvartToLink(link.rawFile);
+        const newImag = await useAddImageInStorafe(link.rawFile);
         console.log(newImag);
 
-        return dataStore.addData("images", {
-          authorEmail: upData.email,
-          displayName: upData.displayName,
-          photoUrl: upData.photoUrl,
+        let IsSubmited = await dataStore.addData("images", {
+          authorEmail: currentUser.email,
+          displayName: currentUser.displayName,
+          photoUrl: currentUser?.photoURL ?? null,
           uploadTimeFirebase: serverTimestamp(),
           uploadTime: new Date(),
           image: {
@@ -65,14 +69,15 @@ export default function SearchBox() {
           },
           statuses: satus,
         });
+        return IsSubmited
       });
 
       try {
         await Promise.all(promises);
         console.log(promises);
-        setupsateData((prev) => prev + 1);
-        setSearchBoxShowing(false);
-        setupimageLinks(null);
+        setupdateData((prev) => prev + 1);
+        setIsUserUploadingImage(false);
+        setupimages(null);
         setTitle("");
         setTags([]);
         setSatus("");
@@ -83,7 +88,6 @@ export default function SearchBox() {
         setErr(true);
       } finally {
         setUploading(false);
-        setBtnLoading(false);
       }
       return;
     }
@@ -92,33 +96,32 @@ export default function SearchBox() {
 
   // map all image user uloaded
   useEffect(() => {
-    if (!upimageLinks || upimageLinks.length === 0) {
-      setLinkMap([]);
+    if (!upimages || upimages.length === 0) {
+      setSubmitImage([]);
       return;
     }
 
-    function mapF() {
-      const results = upimageLinks.map((fileObj) => {
+    function mapFuntion() {
+      const results = upimages.map((fileObj) => {
         const file = fileObj.imgurl;
         return { imgurl: file };
       });
-      setLinkMap(results);
+      setSubmitImage(results);
     }
 
-    mapF();
-  }, [upimageLinks]);
+    mapFuntion();
+  }, [upimages]);
 
   // sarch box
-  function unShowFuntion() {
-    setSearchBoxShowing(false);
-    setupimageLinks(null);
-    setSearchBoxShowing(false);
+  function IsNotSing() {
+    setIsUserUploadingImage(false);
+    setupimages(null);
     setTitle("");
     setTags([]);
     setSatus("");
     setDes("");
     setErr(false);
-    setLinkMap(null);
+    setSubmitImage(null);
   }
 
   // filterImage
@@ -126,49 +129,68 @@ export default function SearchBox() {
     setLinkMap((prev) => prev.filter((_, idx) => idx !== id));
   }
 
-  // filterImage
-  function filterTags(id) {
-    setTags((prev) => prev.filter((_, idx) => idx !== id));
-  }
-
-  // upload images funtions
-  function handleDragOver(e) {
+   // Drag Over
+   function handleDragOver(e) {
     e.preventDefault();
     upBox.current.classList.add("border-slate-500");
     upBox.current.classList.remove("border-slate-700");
-    setIsDrop(true);
+    setIsDrag(true);
   }
 
+  // Drag leave
   function handleDragLeave() {
     upBox.current.classList.remove("border-slate-500");
     upBox.current.classList.add("border-slate-700");
-    setIsDrop(false);
+    setIsDrag(false);
   }
 
+  // Drop image
   function handleDrop(e) {
     e.preventDefault();
     upBox.current.classList.remove("border-blue-400");
     setIsDrop(false);
 
-    const files = Array.from(e.dataTransfer.files);
-    setupimageLinks(files);
+    const files = e.dataTransfer.files;
+    handleFiles(files);
   }
 
+  // file uploaded images
   function handleFileInput(e) {
-    const files = Array.from(e.target.files);
-    setupimageLinks(files);
+    const files = e.target.files;
+    handleFiles(files);
+  }
+
+  // share data in upload box
+  async function handleFiles(files) {
+    const currentUserData = currentUser.reloadUserInfo;
+
+    // Convert files to an array of objects
+    const filesArr = Array.from(files).map((file) => ({
+      imgurl: URL.createObjectURL(file),
+      rawFile: file,
+    }));
+
+    console.log(filesArr);
+
+    setIsUserUploadingImage(true);
+    setupimages(filesArr);
+    setUserLoggedData(currentUserData);
   }
   return (
     <>
-      {searchBoxShowing && (
+      {isUserUploadingImage && !uploading && (
         <div className="min-h-screen fixed z-50 overflow-hidden w-full h-full bg-black/30 backdrop-blur-md flex justify-center items-center py-14">
+          
+          {/* blur bg */}
           <div
-            onClick={unShowFuntion}
+            onClick={IsNotSing}
             className="w-screen h-screen absolute z-20"
           ></div>
+
+          {/* main upload box */}
           <div className="scroll-area h-[100%] lg:h-[80%] overflow-y-auto overflow-x-hidden py-8 px-5 relative z-30 w-full md:w-[80%] lg:w-[60%] xl:w-[50%] bg-slate-800/70 border-slate-200/50 border-dashed border-2 rounded-lg text-white">
             <div className="w-full flex justify-between flex-row-reverse mb-5">
-              <div onClick={() => unShowFuntion()}>
+              <div onClick={() => IsNotSing()}>
                 <X />
               </div>
               {/* Scroll hint text for mobile */}
@@ -177,16 +199,18 @@ export default function SearchBox() {
               </div>
             </div>
 
+            {/* Preview Area */}
             <div>
               <div className="relative w-full">
                 {/* Left fade gradient */}
                 <div className="rounded-2xl absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-slate-900 to-transparent z-10 sm:hidden" />
                 {/* Right fade gradient */}
                 <div className="rounded-2xl absolute right-0 top-0 bottom-0 w-4 bg-gradient-to-l from-slate-900 to-transparent z-10 sm:hidden" />
+
                 {/* images box */}
                 <div className="px-3 py-2 scroll-area h-[200px] pb-3 flex gap-[20px] even:bg-black justify-start items-center overflow-x-auto shadow-inner shadow-slate-900 rounded-xl">
-                  {linkMap.length > 0 &&
-                    linkMap.map((link, idx) => (
+                  {submitImage.length > 0 &&
+                    submitImage.map((link, idx) => (
                       <div
                         key={idx}
                         className="relative w-full min-w-[250px] h-full overflow-hidden"
@@ -206,15 +230,15 @@ export default function SearchBox() {
                       </div>
                     ))}
 
-                  {linkMap.length == 0 && (
+                  {submitImage.length == 0 && (
                     <div
                       onDragOver={handleDragOver}
                       onDragLeave={handleDragLeave}
                       onDrop={handleDrop}
                       ref={upBox}
-                      className="bg-slate-800/70 border-slate-700 w-full py-3 flex flex-col justify-center items-center gap-[10px] border-dashed border-[2px] border-slate-50/60 rounded-xl transition-colors data-scroll-section"
+                      className="bg-slate-800/70 border-slate-700 w-full py-3 flex flex-col justify-center items-center gap-[10px] border-dashed border-[1px] border-slate-50/60 rounded-xl transition-colors data-scroll-section"
                     >
-                      {IsDrop == false && (
+                      {!IsDrag && (
                         <>
                           <label
                             htmlFor="uploadFrom"
@@ -243,13 +267,10 @@ export default function SearchBox() {
                           </div>
                         </>
                       )}
-                      {IsDrop == true && (
+                      {IsDrag && (
                         <div className="flex flex-col justify-center items-center gap-2">
-                          <ImagePlusIcon size={90} />
-                          <h1 className="text-[1.2rem] lg:text-xl">
-                            Drop Here !
-                          </h1>
-                        </div>
+                        <Plus size={120} />
+                      </div>
                       )}
                     </div>
                   )}
@@ -265,11 +286,12 @@ export default function SearchBox() {
                 <input
                   onChange={(e) => setTitle(e.target.value)}
                   value={title}
-                  className={`w-full ring-2 ${
-                    err
-                      ? "ring-red-400 text-red-500"
-                      : "ring-[#61DBFB] text-black"
-                  } text-[1.28rem] font-normal px-3 pr-[35px] py-2 rounded-lg border-none outline-none`}
+                  className={clsx(
+                    "w-full ring-2",
+                      err  && "ring-red-400 text-red-500",
+                      !err  && "ring-[#61DBFB] text-black",
+                    "text-[1.28rem] font-normal px-3 pr-[35px] py-2 rounded-lg border-none outline-none"
+                  )}
                   id="title"
                   type="text"
                   placeholder="type title..."
@@ -291,21 +313,23 @@ export default function SearchBox() {
                         }
                       }
                     }}
-                    className={`w-full ring-2 ${
-                      err
-                        ? "ring-red-400 text-red-500"
-                        : "ring-[#61DBFB] text-black"
-                    } text-[1.28rem] font-normal px-3 pr-[35px] py-2 rounded-lg border-none outline-none`}
+                    className={clsx(
+                      "w-full ring-2",
+                        err  && "ring-red-400 text-red-500",
+                        !err  && "ring-[#61DBFB] text-black",
+                      "text-[1.28rem] font-normal px-3 pr-[35px] py-2 rounded-lg border-none outline-none"
+                    )}
                     type="text"
                     placeholder="type tags then press space or enter..."
                   />
                 </div>
                 <div
-                  className={`relative flex gap-3 flex-wrap mt-8 min-h-[150px] w-full ring-2 ${
-                    err
-                      ? "ring-red-400 text-red-500"
-                      : "ring-[#61DBFB] text-black"
-                  } text-[1.28rem] font-normal px-3 pr-[35px] py-2 rounded-lg border-none outline-none bg-slate-50`}
+                  className={clsx(
+                    "relative mt-5 bg-slate-100 w-full min-h-[250px] ring-2",
+                      err  && "ring-red-400 text-red-500",
+                      !err  && "ring-[#61DBFB] text-black",
+                    "text-[1.28rem] font-normal px-3 pr-[35px] py-2 rounded-lg border-none outline-none"
+                  )}
                 >
                   {tags &&
                     tags.map((tag, idx) => (
@@ -341,11 +365,12 @@ export default function SearchBox() {
                   onChange={(e) => setDes(e.target.value)}
                   value={des}
                   placeholder="type your description.."
-                  className={` h-full resize-none flex gap-3 flex-wrap mt-3 min-h-[150px] w-full ring-2 ${
-                    err
-                      ? "ring-red-400 text-red-500"
-                      : "ring-[#61DBFB] text-black"
-                  } text-[1.28rem] font-normal px-3 pr-[35px] py-2 rounded-lg border-none outline-none bg-slate-50`}
+                  className={clsx(
+                    "h-full resize-none flex gap-3 flex-wrap mt-3 min-h-[150px] w-full ring-2",
+                    err && "ring-red-400 text-red-500",
+                    !err && "ring-[#61DBFB] text-black",
+                    "text-[1.28rem] font-normal px-3 pr-[35px] py-2 rounded-lg border-none outline-none bg-slate-50"
+                  )}
                 ></textarea>
               </div>
               <div className="flex flex-col gap-3 mt-4 px-5">
@@ -355,11 +380,12 @@ export default function SearchBox() {
                 <select
                   value={satus}
                   onChange={(e) => setSatus(e.target.value)}
-                  className={`w-full ring-2 ${
-                    err
-                      ? "ring-red-400 text-red-500"
-                      : "ring-[#61DBFB] text-black"
-                  } text-[1.25rem] font-normal px-2 py-2 rounded-lg border-none outline-none`}
+                  className={clsx(
+                    "w-full ring-2",
+                      err  && "ring-red-400 text-red-500",
+                      !err  && "ring-[#61DBFB] text-black",
+                    "text-[1.28rem] font-normal px-3 pr-[35px] py-2 rounded-lg border-none outline-none"
+                  )}
                   required
                 >
                   <option value="" disabled>
@@ -376,7 +402,7 @@ export default function SearchBox() {
                   } w-[60%] px-3 py-2 text-xl rounded-lg font-semibold flex justify-center items-center`}
                   type="submit"
                 >
-                  {btnLoading ? (
+                  {uploading ? (
                     <Loader2Icon className="animate-spin" size={35} />
                   ) : (
                     "Public"
@@ -386,6 +412,15 @@ export default function SearchBox() {
             </form>
           </div>
         </div>
+      )}
+
+      {isUserUploadingImage && uploading && (
+        <>
+          {/* main upload box */}
+          <div className="scroll-area h-[100%] lg:h-[80%] overflow-y-auto overflow-x-hidden py-8 px-5 relative z-30 w-full md:w-[80%] lg:w-[60%] xl:w-[50%] bg-slate-800/70 border-slate-200/50 border-dashed border-2 rounded-lg text-white">
+              <h1>Uploading</h1>
+          </div>
+        </>
       )}
     </>
   );

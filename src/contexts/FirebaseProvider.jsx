@@ -19,6 +19,8 @@ import {
   orderBy,
   startAfter,
   limit,
+  getDoc,
+  doc,
 } from "firebase/firestore";
 import useCheackSame from "../Hooks/useCheackSame";
 
@@ -29,6 +31,7 @@ const fireStore = getFirestore(app);
 export function FirebaseProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [userLoggedData, setUserLoggedData] = useState(null);
+  const [key, setKey] = useState("")
 
   // get data state
   const [lastDoc, setLastDoc] = useState(null);
@@ -94,7 +97,6 @@ export function FirebaseProvider({ children }) {
     addData: async (dataName, data) => {
       try {
         const collectionRef = collection(fireStore, dataName);
-        if (!data) return;
         const docRef = await addDoc(collectionRef, data);
         return docRef;
       } catch (error) {
@@ -102,7 +104,16 @@ export function FirebaseProvider({ children }) {
         return "error";
       }
     },
-
+    getApiKey: async () => {
+      const docRef = doc(fireStore, "api", "key");
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        return docSnap.data().key;
+      } else {
+        console.log("No such document!");
+        return "error";
+      }
+    }
   };
 
   // fetchImageData funtion database thke image data ane
@@ -112,7 +123,7 @@ export function FirebaseProvider({ children }) {
       const q = query(
         collection(fireStore, "images"),
         orderBy("uploadTimeFirebase", "desc"),
-        limit(10)
+        limit(50)
       );
       const snap = await getDocs(q);
       const items = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
@@ -139,7 +150,7 @@ export function FirebaseProvider({ children }) {
       }
 
       const items = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      const filteredItems = useCheackSame(parent, images, "id")
+      const filteredItems = useCheackSame(images, items, "id")
       console.log(filteredItems);
 
       setImages((prev) => [...prev, ...filteredItems]);
@@ -172,15 +183,53 @@ export function FirebaseProvider({ children }) {
   // Auth state listener
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
+      console.log(user);
+      let userObj = {
+        email: user.reloadUserInfo.email,
+        profileImgUrl: "F",
+      }
+      console.log(userObj);
+      
       setCurrentUser(user);
     });
-    return () => unsubscribe();
+    unsubscribe();
   }, []);
+
+  // get api 
+  useEffect(() => {
+    (async () => {
+      let key = await dataStore.getApiKey();
+      setKey(key);
+    })();
+  }, []);
+  
 
   // emni..
   useEffect(() => {
     console.log(images);
   }, [images]);
+
+  const useAddImageInStorafe = async (file) => {
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("image", file);
+
+    console.log(key);
+    
+
+    const res = await fetch(
+      `https://api.imgbb.com/1/upload?key=${key}`,
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+
+    const data = await res.json();
+    console.log(data);
+    return data?.data?.url;
+};
 
   return (
     <FirebaseContext.Provider
@@ -202,7 +251,9 @@ export function FirebaseProvider({ children }) {
         uploading, // user uploading image ?? check this data
         setUploading, // user uploading image ?? check  funtion
 
-        setupdateData // user updateData ?? check this update data funtion
+        setupdateData, // user updateData ?? check this update data funtion
+
+        useAddImageInStorafe // photo convart funtion
       }}
     >
       {children}

@@ -4,9 +4,9 @@ import { Bounce, toast, ToastContainer } from "react-toastify";
 import { FirebaseContext } from "../contexts/FirebaseContext";
 import google from "../assets/google.png";
 import clsx from "clsx";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 
 export default function SignUpPages() {
-  const signBtn = useRef(null);
   const [err, setErr] = useState(false);
 
   // all input
@@ -27,7 +27,10 @@ export default function SignUpPages() {
   const [errPassword, setErrPassword] = useState(false);
   const [errConfirmPassword, setErrConfirmPassword] = useState(false);
 
+  const [isDisabled, setIsDisabled] = useState(false)
+
   const { userAuth } = useContext(FirebaseContext);
+  const navigate = useNavigate();
 
   const passRules = [
     {
@@ -49,20 +52,6 @@ export default function SignUpPages() {
   ];
 
   useEffect(() => {
-    // Full Name Validation
-    if (fullName === "") {
-      setErrFullName(false);
-    } else {
-      setErrFullName(false);
-    }
-
-    // Username Validation
-    if (username === "") {
-      setErrUsername(false);
-    } else {
-      setErrUsername(false);
-    }
-
     // Email Validation
     if (email !== "" && !email.includes("@gmail.com")) {
       setErrEmail(true);
@@ -70,12 +59,12 @@ export default function SignUpPages() {
       setErrEmail(false);
     }
 
-    // Password Validation
     if (password !== "" && passRules.some((rule) => rule.isValid === false)) {
       setErrPassword(true);
     } else {
       setErrPassword(false);
     }
+    
 
     // Confirm Password Validation
     if (confirmPassword !== "" && confirmPassword !== password) {
@@ -84,61 +73,54 @@ export default function SignUpPages() {
       setErrConfirmPassword(false);
     }
 
-    let nameRequired = fullName !== "";
-    let userNameRequired = username !== "";
-    let emailRequired = (email !== "" && email.includes("@gmail.com"));
-    let mainPassRequired = (passRules.some((rule) => rule.isValid === true) && password === confirmPassword);
+    const isInvalid =
+    fullName === "" ||
+    username === "" ||
+    email === "" ||
+    !email.includes("@gmail.com") ||
+    passRules.some((rule) => rule.isValid === false) ||
+    password !== confirmPassword;
 
-    if (nameRequired && userNameRequired && emailRequired && mainPassRequired) {
-      signBtn.current.disabled = false;
-    } else if(fullName === "" || username === "" || email === "" || email.includes("@gmail.com") || passRules.some((rule) => rule.isValid === false || password !== confirmPassword)) {
-      signBtn.current.disabled = true;
-    }
+    setIsDisabled(isInvalid);
   }, [fullName, username, email, password, confirmPassword]);
 
-  function HandleLoginSubmit(e) {
+  async function HandleLoginSubmit(e) {
     e.preventDefault();
-
-    // Overall Error
-    if(fullName === "" || username === "" || email === "" || email.includes("@gmail.com") || passRules.some((rule) => rule.isValid === false || password !== confirmPassword)) {
+  
+    const isInvalid =
+    fullName === "" ||
+    username === "" ||
+    email === "" ||
+    !email.includes("@gmail.com") ||
+    passRules.some((rule) => rule.isValid === false) ||
+    password !== confirmPassword;
+  
+    if (isInvalid) {
       setErrFullName(fullName === "");
       setErrUsername(username === "");
-      setErrEmail(email == "" || !email.includes("@gmail.com"));
-      setErrPassword(
-        password == "" || passRules.some((rule) => rule.isValid == false)
-      );
-      setErrConfirmPassword(
-        confirmPassword !== "" || confirmPassword !== password
-      );
+      setErrEmail(email === "" || !email.includes("@gmail.com"));
+      setErrPassword(password === "" || passRules.some((rule) => !rule.isValid));
+      setErrConfirmPassword(confirmPassword !== "" && confirmPassword !== password);
       setErr(true);
-      signBtn.current.disabled = true;
-      toast.error("Invalid Form")
+      toast.error("Invalid Form");
       return;
     }
-
-    console.log(
-      fullName === "" ||
-        username === "" ||
-        email === "" ||
-        passRules.some((rule) => rule.isValid === false) ||
-        password !== confirmPassword
-    );
-
-    console.log(err);
-
-    signBtn.current.disabled = false;
+  
+    // valid হলে submit
     setErr(false);
-    let signInRes = userAuth.useSignIn(email, password);
+    const signInRes = await userAuth.useSignIn(email, password);
     console.log(signInRes);
-    if (signInRes == "error") {
+  
+    if (signInRes === "error") {
       setErr(true);
       toast.error("Please type your Info");
       return;
     } else {
-      console.log("Signup");
       toast.success("Account Created Successfully!");
+      navigate("/");
     }
   }
+  
 
   return (
     <section className="w-full h-screen flex justify-center items-center">
@@ -194,7 +176,7 @@ export default function SignUpPages() {
                 "w-full ring-2",
                 errPassword && "ring-red-400 text-red-500",
                 !errPassword && "ring-[#61DBFB] text-black",
-                "text-black text-xl px-3 py-2 rounded-lg border-none outline-none"
+                "text-black text-xl px-3 py-2 rounded-lg border-none outline-none appearance-none"
               )}
               type={showPass ? "text" : "password"}
               placeholder="Password..."
@@ -211,7 +193,7 @@ export default function SignUpPages() {
           <article
             className={clsx(
               errPassword && "flex flex-col gap-[6px]",
-              !errConfirmPassword && "hidden"
+              !errPassword && "hidden"
             )}
           >
             {passRules.map((passRule, id) => (
@@ -270,16 +252,27 @@ export default function SignUpPages() {
         </article>
         <div className="w-full flex justify-center items-center">
           <button
-            ref={signBtn}
-            className={`${
-              err
-                ? "bg-red-400 pointer-events-none opacity-[0.7]"
-                : "bg-[#61DBFB] text-gray-950 pointer-events-auto"
-            } w-[60%] px-3 py-2 text-xl rounded-lg font-semibold select-none pointer-events-auto`}
+            disabled={isDisabled}
+            className={clsx(
+              err && "bg-red-400 pointer-events-none opacity-[0.7]",
+              !err  && "bg-[#61DBFB] text-gray-950 pointer-events-auto",
+              isDisabled && "pointer-events-none",
+              !isDisabled && "pointer-events-auto",
+              "w-[60%] px-3 py-2 text-xl rounded-lg font-semibold select-none pointer-events-auto"
+            )}
             type="submit"
           >
             Sign Up
           </button>
+        </div>
+        <hr className="w-full opacity-30 h-[1px]" />
+        <div className="text-center mt-2">
+          <p className="text-gray-400">
+            Already have an account?{" "}
+            <Link to="/login" className="text-[#61DBFB] hover:underline">
+              Log In
+            </Link>
+          </p>
         </div>
         <hr className="w-full opacity-30 h-[1px]" />
         <div
@@ -293,7 +286,6 @@ export default function SignUpPages() {
             <h1 className="font-medium">Countinue With Google</h1>
           </div>
         </div>{" "}
-        <hr />
       </form>
       <ToastContainer
         position="top-right"

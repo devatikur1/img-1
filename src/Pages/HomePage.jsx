@@ -1,17 +1,22 @@
-import { CloudUpload, Loader, Plus } from "lucide-react";
+import { CloudUpload, EllipsisVertical, Heart, Loader, Plus } from "lucide-react";
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { FirebaseContext } from "../contexts/FirebaseContext";
 
 // locomotive-scroll-css
-import useLocomotiveScroll from "../utils/useLocomotiveScroll";
+import useLocomotiveScroll from "../Hooks/useLocomotiveScroll";
+import clsx from "clsx";
 
 export default function HomePage() {
   const upBox = useRef(null);
-  const [IsDrag, setIsDrag] = useState(false);
+  const [showOption, setShowOption] = useState(false)
+
+
+  const [IsDrag, setIsDrag] = useState(null);
   const {
     currentUser, // logged user
     images, // images in database
 
+    isUserUploadingImage,
     setIsUserUploadingImage,  // uploaded funtion
     setupimages, // users uploaded image data sate funtion
 
@@ -38,7 +43,7 @@ export default function HomePage() {
   function handleDrop(e) {
     e.preventDefault();
     upBox.current.classList.remove("border-blue-400");
-    setIsDrop(false);
+    setIsDrag(false);
 
     const files = e.dataTransfer.files;
     handleFiles(files);
@@ -68,7 +73,6 @@ export default function HomePage() {
   }
 
 
-
   // Hook থেকে ref আর instance নাও
   const { containerRef, scrollInstance } = useLocomotiveScroll({
     smooth: true,
@@ -78,7 +82,7 @@ export default function HomePage() {
   // scroll pause/resume control
   useEffect(() => {
     if (!scrollInstance) return;
-    if (searchBoxShowing) {
+    if (isUserUploadingImage) {
       scrollInstance.stop();
       document.body.classList.add("overflow-hidden");
     } else {
@@ -91,7 +95,7 @@ export default function HomePage() {
       scrollInstance.start();
       document.body.classList.remove("overflow-hidden");
     };
-  }, [searchBoxShowing, scrollInstance]);
+  }, [isUserUploadingImage, scrollInstance]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -108,30 +112,60 @@ export default function HomePage() {
     >
       {/* Preview Area */}
       <div className="columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-5 m-4">
-        {images.map((file, idx) => (
-          <div
-            key={idx}
-            className={`relative ${
-              file.statuses == "public" ? "flex" : "hidden"
-            } w-full flex-col items-center my-5`}
+        {images.map((file) => (
+            <div
+            
+            key={file.id}
+            className={clsx(
+              "relative",
+              file.statuses == "public" && "flex",
+              file.statuses == "private" && "hidden",
+              "parent_optionBox w-full flex-col items-center my-5 cursor-pointer rounded-lg overflow-hidden *:select-none"
+            )}
           >
-            <img
-              loading="lazy"
-              src={file.image.url} // file.blob নয়, file দিয়েই blob তৈরি হয়
-              alt={""}
-              className="w-full h-auto object-cover rounded-lg"
-            />
-            <div className="absolute w-full bottom-0 left-0 bg-black/20 px-3 py-2 flex flex-col gap-[2px]">
+            <div className="w-full h-full object-cover">
+                <img
+                  loading="lazy"
+                  src={file.image.url}
+                  alt={file.image.title}
+                  className="w-full h-auto object-cover profilePic"
+                />
+            </div>
+            <div className="optionBox bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-transparent to-black absolute z-30 w-full h-full bottom-0 left-0 px-3 py-2 flex flex-col justify-between gap-[2px]">
+              <article className="flex justify-between items-center">
+                
+                <div className="flex items-center gap-1 bg-black/50 px-2 py-0.5 rounded-xl">
+                    <Heart size={16} />
+                    <h1 className="text-[15px]">Like</h1>
+                </div>
+                <div onClick={() => setShowOption(showOption === file.id ? null : file.id)}>
+                  <EllipsisVertical size={20} />
+                </div>
+              </article>
+            <article>
               <div className="flex items-center gap-[5px]">
                 <img
                   loading="lazy"
                   className="w-[30px] h-[30px] object-cover rounded-full"
                   src={file.photoUrl}
-                  alt={file.image.title}
                 />
                 <p className="text-[1rem] font-semibold">{file.displayName}</p>
               </div>
               <p className="pl-3 pt-1 text-[0.8rem]">{file.image.title}</p>
+              </article>
+            </div>
+            
+            <div className={clsx(
+              showOption === file.id && "show",
+              showOption !== file.id && "hidden",
+              "bg-black/50 rounded-xl backdrop-blur-md px-2 py-2 absolute right-0 top-8 w-[80%] z-40"
+            )}>
+
+              <ul className="flex flex-col gap-2">
+                <li className="px-3 py-2 flex justify-start items-center cursor-pointer">info</li>
+                <hr />
+                <li className="text-red-500 px-[10px] py-[6px] bg-slate-300 rounded-lg flex justify-start items-center cursor-pointer">Delete</li>
+              </ul>
             </div>
           </div>
         ))}
@@ -143,7 +177,7 @@ export default function HomePage() {
           <section
             className="mt-20 w-full h-[250px] flex flex-col items-center gap-6 justify-center"
           >
-            <div className="bg-slate-800/70 border-slate-700 w-[90%] xl:w-[40%] mt-20 h-[250px] flex flex-col justify-center items-center gap-[10px] border-dashed border-[2px] border-slate-50/60 rounded-xl py-40 transition-colors duration-200 overflow-hidden">
+            <div className="bg-slate-800/70 border-slate-700 w-[90%] xl:w-[40%] mt-20 h-[250px] flex flex-col justify-center items-center gap-[10px] border-dashed border-[1px] border-slate-50/60 rounded-xl py-40 transition-colors duration-200 overflow-hidden">
               <div className="w-full h-full flex justify-center items-center">
                 <Loader className="animate-spin" size={140} />
               </div>
@@ -156,7 +190,7 @@ export default function HomePage() {
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
               ref={upBox}
-              className="bg-slate-800/70 border-slate-700 w-[90%] xl:w-[40%] mt-20 h-[250px] flex flex-col justify-center items-center gap-[10px] border-dashed border-[2px] border-slate-50/60 rounded-xl py-40 transition-colors duration-200 overflow-hidden"
+              className="bg-slate-800/70 border-slate-700 w-[90%] xl:w-[40%] mt-20 h-[250px] flex flex-col justify-center items-center gap-[10px] border-dashed border-[1px] border-slate-50/60 rounded-xl py-40 transition-colors duration-200 overflow-hidden"
             >
               {!IsDrag && (
                 <>
@@ -187,7 +221,7 @@ export default function HomePage() {
                   </div>
                 </>
               )}
-              {IsDrop && (
+              {IsDrag && (
                 <div className="flex flex-col justify-center items-center gap-2">
                   <Plus size={120} />
                 </div>

@@ -4,6 +4,7 @@ import { Bounce, toast, ToastContainer } from "react-toastify";
 import google from "../assets/google.png";
 import { FirebaseContext } from "../contexts/FirebaseContext";
 import clsx from "clsx";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function LoginPage() {
   const [err, setErr] = useState(false);
@@ -14,20 +15,20 @@ export default function LoginPage() {
   const [errEmail, setErrEmail] = useState(false);
 
   const { userAuth } = useContext(FirebaseContext);
+  const navigate = useNavigate();
+
 
   async function HandleLoginSubmit(e) {
     e.preventDefault();
 
-    if (!email && !password) {
+    if (!email && email !== "" && !password && password !== "") {
       setErr(true);
       toast.error("Please complete Email & Password !");
-      return;
     }
 
     if (!email) {
       setErrEmail(true);
       toast.error("Please complete Email !");
-      return;
     }
 
     if (!password) {
@@ -45,6 +46,7 @@ export default function LoginPage() {
       if (res !== "error") {
         toast.success("Login Successful!");
         console.log("Logged in user:", res);
+        navigate("/");
       } else {
         toast.error("Login Failed! Wrong credentials.");
       }
@@ -61,8 +63,8 @@ export default function LoginPage() {
         className={
           clsx(
             "relative z-20 w-[98%] md:w-[60%] lg:w-[50%] xl:w-[40%] 2xl:w-[30%] flex flex-col items-center gap-3 justify-center px-10 py-10 bg-black/10 backdrop-blur-2xl text-white border-[1px] outline-none rounded-xl",
-            err && "border-slate-50/20",
-            !err && "border-red-500",
+            !err && "border-slate-50/20",
+            err && "border-red-500",
           )
         }
       >
@@ -112,6 +114,15 @@ export default function LoginPage() {
           </button>
         </div>
         <hr className="w-full opacity-30 h-[1px]" />
+        <div className="text-center mt-2">
+          <p className="text-gray-400">
+            Already have an account?{" "}
+            <Link to="/login" className="text-[#61DBFB] hover:underline">
+              Log In
+            </Link>
+          </p>
+        </div>
+        <hr className="w-full opacity-30 h-[1px]" />
         <div
           onClick={() => {
             userAuth.googleAuth();
@@ -123,6 +134,7 @@ export default function LoginPage() {
             <h1 className="font-medium">Countinue With Google</h1>
           </div>
         </div>
+
       </form>
       <ToastContainer
         position="top-right"
