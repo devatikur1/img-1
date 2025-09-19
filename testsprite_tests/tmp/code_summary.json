@@ -1,0 +1,100 @@
+{
+  "tech_stack": [
+    "JavaScript",
+    "React",
+    "Vite",
+    "Tailwind CSS",
+    "PostCSS",
+    "ESLint",
+    "Firebase (Web SDK)"
+  ],
+  "features": [
+    {
+      "name": "App Shell and Routing",
+      "description": "Core app wrapper and route/layout composition.",
+      "files": [
+        "src/App.jsx",
+        "src/main.jsx",
+        "src/Layout/RootLayout.jsx",
+        "index.html",
+        "src/index.css"
+      ]
+    },
+    {
+      "name": "Header Component",
+      "description": "Top navigation/header UI, likely showing auth state and navigation.",
+      "files": [
+        "src/components/Header/Header.jsx"
+      ]
+    },
+    {
+      "name": "Upload Box",
+      "description": "UI for uploading files; likely integrates with Firebase storage and includes drag-and-drop, progress, and validation.",
+      "files": [
+        "src/components/UploadBox/UploadBox.jsx"
+      ]
+    },
+    {
+      "name": "Pages",
+      "description": "Route pages for main flows (home, login, signup, error).",
+      "files": [
+        "src/Pages/HomePage.jsx",
+        "src/Pages/LoginPage.jsx",
+        "src/Pages/SignUpPages.jsx",
+        "src/Pages/ErrorPage.jsx"
+      ]
+    },
+    {
+      "name": "Firebase Context and Provider",
+      "description": "Firebase initialization and React Context provider for auth/storage APIs.",
+      "files": [
+        "src/contexts/Firebase.js",
+        "src/contexts/FirebaseContext.jsx",
+        "src/contexts/FirebaseProvider.jsx"
+      ]
+    },
+    {
+      "name": "Custom Hooks",
+      "description": "Utility hooks for scrolling, equality checks, and file conversion.",
+      "files": [
+        "src/Hooks/useLocomotiveScroll.js",
+        "src/Hooks/useCheackSame.js",
+        "src/Hooks/fileToBase64.js"
+      ]
+    },
+    {
+      "name": "Assets",
+      "description": "Static assets including logos and images.",
+      "files": [
+        "src/assets/react.svg",
+        "src/assets/google.png",
+        "public/vite.svg"
+      ]
+    },
+    {
+      "name": "Build Output (dist)",
+      "description": "Vite production build output used for deployment or preview.",
+      "files": [
+        "dist/index.html",
+        "dist/assets/index-DZSGu7Yj.js",
+        "dist/assets/index-DDVHET20.css",
+        "dist/assets/react-CHdo91hT.svg",
+        "dist/assets/google-BpCDm6Q8.png",
+        "dist/vite.svg"
+      ]
+    },
+    {
+      "name": "Tooling and Config",
+      "description": "Project configuration for Vite, Tailwind, PostCSS, and ESLint.",
+      "files": [
+        "vite.config.js",
+        "tailwind.config.js",
+        "postcss.config.js",
+        "eslint.config.js",
+        "package.json",
+        "package-lock.json",
+        "README.md"
+      ]
+    }
+  ]
+}

@@ -5,10 +5,11 @@ import HomePage from "./Pages/HomePage";
 import LoginPage from "./Pages/LoginPage";
 import SignUpPages from "./Pages/SignUpPages";
 import RootLayout from "./Layout/RootLayout";
+import ErrorPage from "./Pages/errorPage";
 
 
 export default function App() {
-  const { currentUser } = useContext(FirebaseContext);
+  const { logged } = useContext(FirebaseContext);
   // console.log(currentUser);
 
   const router = createBrowserRouter(
@@ -21,15 +22,16 @@ export default function App() {
         <Route
           path="login"
           element={
-            !currentUser ? <LoginPage /> : <Navigate index replace />
+            !logged ? <LoginPage /> : <Navigate to={"/"} replace />
           }
         />
         <Route
           path="register"
           element={
-            !currentUser ? <SignUpPages /> : <Navigate index replace />
+            !logged ? <SignUpPages /> : <Navigate to={"/"} replace />
           }
         />
+        <Route path="*" element={<ErrorPage />} />
       </Route>
     )
   )

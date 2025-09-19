@@ -15,13 +15,14 @@ export default function UploadBox() {
     upimages, // users uploaded image data sate data
     setupimages, // users uploaded image data sate funtion
 
+    handleFiles,
+
     dataStore, // store data
 
     uploading, // user uploading image ?? check this data
     setUploading, // user uploading image ?? check  funtion
 
     setupdateData,
-    setUserLoggedData,
 
     useAddImageInStorafe
   } = useContext(FirebaseContext);
@@ -126,7 +127,7 @@ export default function UploadBox() {
 
   // filterImage
   function filterImage(id) {
-    setLinkMap((prev) => prev.filter((_, idx) => idx !== id));
+    setupimages((prev) => prev.filter((_, idx) => idx !== id));
   }
 
    // Drag Over
@@ -158,23 +159,6 @@ export default function UploadBox() {
   function handleFileInput(e) {
     const files = e.target.files;
     handleFiles(files);
-  }
-
-  // share data in upload box
-  async function handleFiles(files) {
-    const currentUserData = currentUser.reloadUserInfo;
-
-    // Convert files to an array of objects
-    const filesArr = Array.from(files).map((file) => ({
-      imgurl: URL.createObjectURL(file),
-      rawFile: file,
-    }));
-
-    console.log(filesArr);
-
-    setIsUserUploadingImage(true);
-    setupimages(filesArr);
-    setUserLoggedData(currentUserData);
   }
   return (
     <>
@@ -250,17 +234,18 @@ export default function UploadBox() {
                             </h1>
                           </label>
                           <div className="flex items-center justify-center gap-2">
-                            <h1 className="text-[1rem]">or</h1>
+                            <h1 className="text-[0.75rem] font-light text-white/75 lg:text-[0.85rem]">PNG, JPG, JPEG up to 35MB</h1>
                             <input
                               type="file"
                               id="uploadFrom"
                               className="hidden"
+                              accept="image/png, image/jpeg, image/jpg" 
                               multiple
                               onChange={handleFileInput}
                             />
                             <label
                               htmlFor="uploadFrom"
-                              className="text-[1rem]  text-[#61DBFB] font-medium cursor-pointer"
+                              className="text-[1rem] lg:text-[1.1rem] text-[#61DBFB] font-medium cursor-pointer"
                             >
                               Browse
                             </label>

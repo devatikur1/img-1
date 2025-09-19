@@ -1,0 +1,15 @@
+{
+  "status": "commited",
+  "type": "frontend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:5173",
+  "executionArgs": {
+    "projectName": "01",
+    "projectPath": "C:\\Users\\User\\Desktop\\Firebase\\Project\\01",
+    "testIds": [],
+    "additionalInstruction": "UI smoke tests for Vite React app with Firebase: focus on rendering App and Header, navigate between Home, Login, Sign Up routes, attempt login button click (mock Firebase), upload widget presence, and basic accessibility checks. Save a markdown report in testsprite_tests/tmp/report.md.",
+    "envs": {
+      "API_KEY": "sk-user-EvQYjQgUzcALjaD8ngo4yQybBp820-aXHlBmQwhQL4ELghms-BInDvUvD1x4f5wKta4TxePN2XqQlsimwdxh-KDBzElCdBGLgnA-q9kgZFIn4rpaQWocN6-WN-3PcJPwAuo"
+    }
+  }
+}

@@ -1,37 +1,26 @@
 import React, { useEffect, useState } from "react";
 import { FirebaseContext } from "./FirebaseContext";
 import { app } from "./Firebase";
-import {
-  getAuth,
-  createUserWithEmailAndPassword, // sign In 
-  signInWithEmailAndPassword, // Log In
-  GoogleAuthProvider, // google logIn and signIn
-  signInWithPopup, // google logIn and signIn popup
-  onAuthStateChanged, // what user logged
-  signOut, // signout user
-} from "firebase/auth";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { userAuth } from './FirebaseAuth';
 import {
   collection,
   getFirestore,
   getDocs,
-  addDoc,
   query,
   orderBy,
   startAfter,
   limit,
-  getDoc,
-  doc,
 } from "firebase/firestore";
+import { dataStore } from "./FireStore";
 import useCheackSame from "../Hooks/useCheackSame";
 
 const auth = getAuth(app);
-const googleProvider = new GoogleAuthProvider();
 const fireStore = getFirestore(app);
 
 export function FirebaseProvider({ children }) {
-  const [currentUser, setCurrentUser] = useState(null);
-  const [userLoggedData, setUserLoggedData] = useState(null);
-  const [key, setKey] = useState("")
+  const [currentUser, setCurrentUser] = useState({});
+  const [key, setKey] = useState("");
 
   // get data state
   const [lastDoc, setLastDoc] = useState(null);
@@ -45,76 +34,8 @@ export function FirebaseProvider({ children }) {
   const [upimages, setupimages] = useState(null);
   const [updateData, setupdateData] = useState(0);
 
+  const [logged, setLogged] = useState(false);
 
-  // add, log out login object.
-  const userAuth = {
-    useLogin: async (email, password) => {
-      try {
-        const loginRes = await signInWithEmailAndPassword(
-          auth,
-          email,
-          password
-        );
-        return loginRes.user;
-      } catch (error) {
-        console.error(error);
-        return "error";
-      }
-    },
-
-    useSignIn: async (email, password) => {
-      try {
-        const signRes = await createUserWithEmailAndPassword(
-          auth,
-          email,
-          password
-        );
-        return signRes.user;
-      } catch (error) {
-        console.error(error);
-        return "error";
-      }
-    },
-
-    googleAuth: async () => {
-      try {
-        const googleRes = await signInWithPopup(auth, googleProvider);
-        return googleRes.user;
-      } catch (error) {
-        console.error(error);
-        return "error";
-      }
-    },
-
-    logout: async () => {
-      await signOut(auth);
-    },
-
-  };
-
-  // store data in database use this obeject dataStore
-  const dataStore = {
-    addData: async (dataName, data) => {
-      try {
-        const collectionRef = collection(fireStore, dataName);
-        const docRef = await addDoc(collectionRef, data);
-        return docRef;
-      } catch (error) {
-        console.log(`Add-data: ${error}`);
-        return "error";
-      }
-    },
-    getApiKey: async () => {
-      const docRef = doc(fireStore, "api", "key");
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        return docSnap.data().key;
-      } else {
-        console.log("No such document!");
-        return "error";
-      }
-    }
-  };
 
   // fetchImageData funtion database thke image data ane
   const fetchImageData = {
@@ -123,7 +44,7 @@ export function FirebaseProvider({ children }) {
       const q = query(
         collection(fireStore, "images"),
         orderBy("uploadTimeFirebase", "desc"),
-        limit(50)
+        limit(20)
       );
       const snap = await getDocs(q);
       const items = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
@@ -183,17 +104,28 @@ export function FirebaseProvider({ children }) {
   // Auth state listener
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      console.log(user);
-      let userObj = {
-        email: user.reloadUserInfo.email,
-        profileImgUrl: "F",
+      if (user) {
+        let userObj = {
+          name: user.displayName || null,
+          email: user.email, // safer
+          profileImgUrl: user.photoURL || null,
+          atLogged: new Date(),
+          atSignIn: new Date(),
+        };
+        console.log("Logged in:", userObj);
+        console.log("Logged in:", userObj.atLogged.getDay());
+        console.log(user);
+        
+        setCurrentUser(user);
+        setLogged(true);
+      } else {
+        console.log("No user logged in");
+        setCurrentUser(null);
+        setLogged(false);
       }
-      console.log(userObj);
-      
-      setCurrentUser(user);
     });
-    unsubscribe();
-  }, []);
+    return () => unsubscribe();
+  }, []);      
 
   // get api 
   useEffect(() => {
@@ -206,7 +138,7 @@ export function FirebaseProvider({ children }) {
 
   // emni..
   useEffect(() => {
-    console.log(images);
+    // console.log(images);
   }, [images]);
 
   const useAddImageInStorafe = async (file) => {
@@ -229,7 +161,24 @@ export function FirebaseProvider({ children }) {
     const data = await res.json();
     console.log(data);
     return data?.data?.url;
-};
+  };
+
+  async function handleFiles(files) {
+
+    // files.filter((file) => console.log(file)
+    // )
+  
+    // Convert files to an array of objects
+    const filesArr = Array.from(files).map((file) => ({
+      imgurl: URL.createObjectURL(file),
+      rawFile: file,
+    }));
+
+    // console.log(filesArr);
+
+    setIsUserUploadingImage(true);
+    setupimages(filesArr);
+  }
 
   return (
     <FirebaseContext.Provider
@@ -237,16 +186,16 @@ export function FirebaseProvider({ children }) {
         userAuth, // auth
         dataStore, // store data
         currentUser, // logged user
+        logged, // user logged ?? this
         images, // images in database
+
+        handleFiles,
 
         isUserUploadingImage,  // uploaded data
         setIsUserUploadingImage,  // uploaded funtion
 
         upimages, // users uploaded image data sate data
         setupimages, // users uploaded image data sate funtion
-
-        userLoggedData, // login user data
-        setUserLoggedData, // login user data funtion
 
         uploading, // user uploading image ?? check this data
         setUploading, // user uploading image ?? check  funtion

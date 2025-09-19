@@ -48,27 +48,17 @@ body, html {
   transition: all 0.2s;
 }
 
-.userInfo {
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.3s ease, visibility 0.3s ease;
-}
-
-.userInfo.show { /* যখন hover বা active */
-  opacity: 1;
-  visibility: visible;
-}
 
 .parent_optionBox {
   transition: all 0.3s ease;
 }
 .parent_optionBox .optionBox{
   display: none;
-  transition: all 0.3s ease;
 }
 
 .parent_optionBox:hover .optionBox {
   display: flex;
+  padding: 25px 20px;
 }
 
 
@@ -106,4 +96,34 @@ a::after {
 
 a.active::after {
   width: 100%;
+}
+/* 
+<div className="relative">
+<div
+  className="absolute -inset-2 rounded-lg "
+></div>
+<div className="relative flex w-full h-64 items-center justify-center border border-zinc-700 rounded-lg bg-zinc-900 text-slate-300">
+  Gradient shadow
+</div>
+</div> */
+
+@media screen and (max-width: 768px) {
+  div img.profilePic {
+    transition: transform 0.3s ease;
+  }
+  
+  div img.profilePic:hover {
+    transform: scale(1);
+  }
+  .parent_optionBox {
+    transition: all 0.3s ease;
+  }
+  .parent_optionBox .optionBox {
+    display: none;
+  }
+
+  .parent_optionBox:hover .optionBox {
+    display: none; /* মোবাইলে hover থাকবে না তাই flex দরকার নেই */
+    padding: 25px 20px;
+  }
 }

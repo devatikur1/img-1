@@ -10,11 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "backblaze-b2": "^1.7.1",
     "clsx": "^2.1.1",
     "firebase": "^12.2.1",
     "gsap": "^3.13.0",
-    "idb": "^8.0.3",
     "locomotive-scroll": "^4.1.4",
     "lucide-react": "^0.544.0",
     "react": "^19.1.1",
