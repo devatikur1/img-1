@@ -245,7 +245,7 @@ export default function UploadBox() {
                             />
                             <label
                               htmlFor="uploadFrom"
-                              className="text-[1rem] lg:text-[1.1rem] text-[#61DBFB] font-medium cursor-pointer"
+                              className="text-[1rem] lg:text-[1.1rem] text-[#7d97f4] font-medium cursor-pointer"
                             >
                               Browse
                             </label>

@@ -9,7 +9,6 @@ export default function useLocomotiveScroll(options = {}) {
   useEffect(() => {
     if (!containerRef.current) return;
 
-    // শুধু একবার init করো
     const scroll = new LocomotiveScroll({
       el: containerRef.current,
       smooth: true,
@@ -29,7 +28,6 @@ export default function useLocomotiveScroll(options = {}) {
       scroll.destroy();
       setScrollInstance(null);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return { containerRef, scrollInstance };

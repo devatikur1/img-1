@@ -7,10 +7,8 @@ import SignUpPages from "./Pages/SignUpPages";
 import RootLayout from "./Layout/RootLayout";
 import ErrorPage from "./Pages/ErrorPage";
 
-
 export default function App() {
   const { logged } = useContext(FirebaseContext);
-  // console.log(currentUser);
 
   const router = createBrowserRouter(
     createRoutesFromElements(

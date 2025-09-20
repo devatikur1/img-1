@@ -2,7 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
-body, html {
+@font-face {
+  font-family: 'CustomFont';   /* তুমি যে নামটি দিতে চাও */
+  src: url('./Fonts/e4af272ccee01ff0-s.woff2') format('woff2');
+  font-weight: normal;          /* optional: normal, bold ইত্যাদি */
+/* optional: normal, italic ইত্যাদি */
+}
+
+
+body {
+  font-family: 'CustomFont', sans-serif;
   overflow: hidden;
 }
 
@@ -77,35 +86,26 @@ div img.profilePic:hover {
   transition: all 0.3s ease;
 }
 
-a {
+a.sideOption {
   position: relative;
   text-decoration: none;
   color: inherit;
 }
 
-a::after {
+a.sideOption::after {
   content: '';
   position: absolute;
   bottom: 0;
   left: 0;
   width: 0%;
-  height: 1.5px;
-  background-color: #61DBFB;
+  height: 2px;
+  background-color: #7d97f4;
   transition: width 0.3s ease;
 }
 
-a.active::after {
+a.sideOption.active::after {
   width: 100%;
 }
-/* 
-<div className="relative">
-<div
-  className="absolute -inset-2 rounded-lg "
-></div>
-<div className="relative flex w-full h-64 items-center justify-center border border-zinc-700 rounded-lg bg-zinc-900 text-slate-300">
-  Gradient shadow
-</div>
-</div> */
 
 @media screen and (max-width: 768px) {
   div img.profilePic {
@@ -126,4 +126,9 @@ a.active::after {
     display: none; /* মোবাইলে hover থাকবে না তাই flex দরকার নেই */
     padding: 25px 20px;
   }
+}
+
+.orAbsolate {
+  position: absolute;
+  background-color: #111;
 }

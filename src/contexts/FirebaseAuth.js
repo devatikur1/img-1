@@ -12,7 +12,7 @@ import {
   doc,
   setDoc,
   serverTimestamp,
-  getDoc,
+  // getDoc,
 } from "firebase/firestore";
 
 const auth = getAuth(app);
@@ -25,16 +25,12 @@ export const userAuth = {
       const loginRes = await signInWithEmailAndPassword(auth, email, password);
       const user = loginRes.user;
 
-      // Firestore doc ref using uid
       const userRef = doc(fireStore, "users", user.uid);
-
-      // Update last login timestamp safely
       await setDoc(
         userRef,
         { atLastLogin: serverTimestamp() },
-        { merge: true } // preserve other fields
+        { merge: true }
       );
-
       return user;
     } catch (error) {
       console.error(error);
@@ -42,28 +38,18 @@ export const userAuth = {
     }
   },
 
-  useSignIn: async (email, password, username, fullName ) => {
+  useSignIn: async (email, password, signUpPayload) => {
     try {
       const signRes = await createUserWithEmailAndPassword(auth, email, password);
       const user = signRes.user;
-
       const userRef = doc(fireStore, "users", user.uid);
-      const docSnap = await getDoc(userRef);
 
       await setDoc(userRef, {
         id: user.uid,
-        name: fullName,
         email: user.email,
-        username,
-        profileImgUrl: null,
         atSignInFirebase: serverTimestamp(),
-        atSignIn: new Date(),
         atLastLoginFirebase: serverTimestamp(),
-        atLastLogin: new Date(),
-        uploadImages: [],
-        likeImages: [],
-        amountOfLike: 0,
-        amountOfPostImages: 0,
+        ...signUpPayload,
       });
 
       return user;

@@ -1,10 +1,16 @@
 import { Eye, EyeOff } from "lucide-react";
-import React, { useContext, useEffect, useRef, useState } from "react";
-import { Bounce, toast, ToastContainer } from "react-toastify";
+import React, { useContext, useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import { FirebaseContext } from "../contexts/FirebaseContext";
 import google from "../assets/google.png";
 import clsx from "clsx";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+
+// hooks
+import { getGeoLocation } from "../hooks/useGetGeoLocation";
+import { getData } from "../hooks/useGetData";
+import { getPostCodeAndState } from "../hooks/useGetPostCodeAndState";
+import { getOS } from "../Hooks/useGetOs";
 
 export default function SignUpPages() {
   const [err, setErr] = useState(false);
@@ -27,7 +33,7 @@ export default function SignUpPages() {
   const [errPassword, setErrPassword] = useState(false);
   const [errConfirmPassword, setErrConfirmPassword] = useState(false);
 
-  const [isDisabled, setIsDisabled] = useState(false)
+  const [isDisabled, setIsDisabled] = useState(false);
 
   const { userAuth } = useContext(FirebaseContext);
   const navigate = useNavigate();
@@ -64,7 +70,6 @@ export default function SignUpPages() {
     } else {
       setErrPassword(false);
     }
-    
 
     // Confirm Password Validation
     if (confirmPassword !== "" && confirmPassword !== password) {
@@ -74,61 +79,148 @@ export default function SignUpPages() {
     }
 
     const isInvalid =
-    fullName === "" ||
-    username === "" ||
-    email === "" ||
-    !email.includes("@gmail.com") ||
-    passRules.some((rule) => rule.isValid === false) ||
-    password !== confirmPassword;
+      fullName === "" ||
+      username === "" ||
+      email === "" ||
+      !email.includes("@gmail.com") ||
+      passRules.some((rule) => rule.isValid === false) ||
+      password !== confirmPassword;
 
     setIsDisabled(isInvalid);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fullName, username, email, password, confirmPassword]);
 
   async function HandleLoginSubmit(e) {
     e.preventDefault();
-  
+
     const isInvalid =
-    fullName === "" ||
-    username === "" ||
-    email === "" ||
-    !email.includes("@gmail.com") ||
-    passRules.some((rule) => rule.isValid === false) ||
-    password !== confirmPassword;
-  
+      fullName === "" ||
+      username === "" ||
+      email === "" ||
+      !email.includes("@gmail.com") ||
+      passRules.some((rule) => rule.isValid === false) ||
+      password !== confirmPassword;
+
     if (isInvalid) {
       setErrFullName(fullName === "");
       setErrUsername(username === "");
       setErrEmail(email === "" || !email.includes("@gmail.com"));
-      setErrPassword(password === "" || passRules.some((rule) => !rule.isValid));
-      setErrConfirmPassword(confirmPassword !== "" && confirmPassword !== password);
+      setErrPassword(
+        password === "" || passRules.some((rule) => !rule.isValid)
+      );
+      setErrConfirmPassword(
+        confirmPassword !== "" && confirmPassword !== password
+      );
       setErr(true);
       toast.error("Invalid Form");
       return;
     }
-  
-    // valid হলে submit
+
+
+    // ----------------- Geo + OS -----------------
+    let geo = { latitude: null, longitude: null };
+    let data = {
+      countryName: null,
+      country_code: null,
+      continent: null,
+      localityInfo: null,
+      locality: null,
+      city: null,
+    };
+    let postAndState = { postcode: null, state: null, address: null };
+    const time = new Date();
+    const OS = getOS();
+
+    try {
+      geo = await getGeoLocation();
+    } catch (err) {
+      console.log(`User denied location, continuing with null values ${err}`);
+    }
+
+    if (geo.latitude && geo.longitude) {
+      try {
+        data = await getData(geo.latitude, geo.longitude);
+        postAndState = await getPostCodeAndState(geo.latitude, geo.longitude);
+      } catch (err) {
+        console.log(`Geo Data fetch failed, continuing with nulls ${err}`);
+      }
+    }
+
+
+    // ----------------- Signup Payload -----------------
+    const signUpPayload = {
+      // user info in auth
+      name: fullName,
+      username,
+      profileImgUrl: null,
+
+      // user sensative info
+      languages: navigator.languages,
+      country: data.countryName || null,
+      countryCode: data.country_code || null,
+      continent: data.continent || null,
+      localityInfo: data.localityInfo || null,
+      locality: data.locality || null,
+      city: data.city || null,
+      state: postAndState.state || null,
+      postCode: postAndState.postcode || null,
+      latitude: geo.latitude || null,
+      longitude: geo.longitude || null,
+      address: postAndState.address || null, // added here
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      browser: navigator.userAgent,
+      os: OS,
+      deviceType: /Mobi|Android/i.test(navigator.userAgent)
+        ? "Mobile"
+        : "Desktop",
+
+      // auth on some data
+      atSignIn: time,
+      atLastLogin: time,
+      amountOfFollowers: 0,
+      amountOfFollowing: 0,
+      amountOfLikes: 0,
+      amountOfPostImages: 0,
+      followers: [],
+      following: [],
+      uploadImages: [],
+      likeImages: [],
+      language: navigator.language,
+    };
+
+
+    // ----------------- Firebase Submit -----------------
     setErr(false);
-    const signInRes = await userAuth.useSignIn(email, password, username, fullName);
+    const signInRes = await userAuth.useSignIn(email, password, signUpPayload);
     console.log(signInRes);
-  
+
     if (signInRes === "error") {
       setErr(true);
       toast.error("Please type your Info");
       return;
     } else {
       toast.success("Account Created Successfully!");
-      navigate("/");
+      navigate("/login");
     }
   }
-  
 
   return (
     <section className="w-full h-screen flex justify-center items-center">
       <form
         onSubmit={(e) => HandleLoginSubmit(e)}
-        className="relative z-20  w-[98%] md:w-[60%] lg:w-[50%] xl:w-[40%] 2xl:w-[30%] flex flex-col items-center gap-3 justify-center px-10 py-10 bg-black/10 backdrop-blur-2xl text-white border-[1px] border-slate-50/20 outline-none rounded-xl"
+        className="relative z-20  w-[98%] md:w-[60%] lg:w-[50%] xl:w-[40%] 2xl:w-[30%] flex flex-col items-start gap-3 justify-center px-10 py-10 bg-black/10 backdrop-blur-2xl text-white border-[1px] border-slate-50/20 outline-none rounded-xl"
       >
-        <h1 className="text-4xl mb-[20px] font-semibold">Create a Account</h1>
+        <div>
+          <h1 className="text-4xl mb-[20px] font-semibold">Create a Account</h1>
+          <div className="text-center"></div>
+          <p className="text-gray-400">
+            Already have an account?{" "}
+            <Link to="/login" className="text-[#61DBFB] hover:underline">
+              Log In
+            </Link>
+          </p>
+        </div>
+        <hr className="opacity-30 h-[1px] w-[100%] mb-5" />
         <div className="w-full flex gap-[8px]">
           <input
             onChange={(e) => setFullName(e.target.value)}
@@ -255,7 +347,7 @@ export default function SignUpPages() {
             disabled={isDisabled}
             className={clsx(
               err && "bg-red-400 pointer-events-none opacity-[0.7]",
-              !err  && "bg-[#61DBFB] text-gray-950 pointer-events-auto",
+              !err && "bg-[#61DBFB] text-gray-950 pointer-events-auto",
               isDisabled && "pointer-events-none",
               !isDisabled && "pointer-events-auto",
               "w-[60%] px-3 py-2 text-xl rounded-lg font-semibold select-none pointer-events-auto"
@@ -265,41 +357,25 @@ export default function SignUpPages() {
             Sign Up
           </button>
         </div>
-        <hr className="w-full opacity-30 h-[1px]" />
-        <div className="text-center mt-2">
-          <p className="text-gray-400">
-            Already have an account?{" "}
-            <Link to="/login" className="text-[#61DBFB] hover:underline">
-              Log In
-            </Link>
-          </p>
+        <div className="relative flex justify-center items-center w-full">
+          <hr className="opacity-30 h-[1px] mb-3 w-[40%] mt-5" />
+          <span className="mt-1 bg-black/10 px-1 rounded-lg backdrop-blur-2xl">
+            or
+          </span>
+          <hr className="opacity-30 h-[1px] mb-3 w-[40%] mt-5" />
         </div>
-        <hr className="w-full opacity-30 h-[1px]" />
         <div
           onClick={() => {
             userAuth.googleAuth();
           }}
           className="w-full flex justify-center items-center"
         >
-          <div className="flex items-center gap-[10px] bg-black/20 border-[1px] border-slate-50/20 px-3 py-2 rounded-2xl cursor-pointer">
+          <div className="flex gap-[10px] bg-black/20 border-[1px] border-slate-50/20 px-3 py-2 rounded-2xl cursor-pointer">
             <img className="w-[25px]" src={google} alt="" />
             <h1 className="font-medium">Countinue With Google</h1>
           </div>
-        </div>{" "}
+        </div>
       </form>
-      <ToastContainer
-        position="top-right"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick={false}
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="dark"
-        transition={Bounce}
-      />
     </section>
   );
 }

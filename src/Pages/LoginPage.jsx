@@ -21,23 +21,24 @@ export default function LoginPage() {
   async function HandleLoginSubmit(e) {
     e.preventDefault();
 
-    if (!email && email !== "" && !password && password !== "") {
-      setErr(true);
-      toast.error("Please complete Email & Password !");
-    }
+    // Reset error states
+    setErr(false);
+    setErrEmail(false);
+    setErrPassword(false);
 
-    if (!email) {
+    // Validate email
+    if (!email || email.trim() === "") {
       setErrEmail(true);
-      toast.error("Please complete Email !");
-    }
-
-    if (!password) {
-      setErrPassword(true);
-      toast.error("Please complete Password !");
+      toast.error("Please enter your email!");
       return;
     }
 
-    setErr(false);
+    // Validate password
+    if (!password || password.trim() === "") {
+      setErrPassword(true);
+      toast.error("Please enter your password!");
+      return;
+    }
 
     try {
       const res = await userAuth.useLogin(email, password);
@@ -62,13 +63,22 @@ export default function LoginPage() {
         onSubmit={(e) => HandleLoginSubmit(e)}
         className={
           clsx(
-            "relative z-20 w-[98%] md:w-[60%] lg:w-[50%] xl:w-[40%] 2xl:w-[30%] flex flex-col items-center gap-3 justify-center px-10 py-10 bg-black/10 backdrop-blur-2xl text-white border-[1px] outline-none rounded-xl",
+            "relative z-20 w-[98%] md:w-[60%] lg:w-[50%] xl:w-[40%] 2xl:w-[30%] flex flex-col items-start gap-3 justify-start px-10 py-10 bg-black/10 backdrop-blur-2xl text-white border-[1px] outline-none rounded-xl",
             !err && "border-slate-50/20",
             err && "border-red-500",
           )
         }
       >
-        <h1 className="text-4xl mb-[20px] font-semibold">Login Now</h1>
+        <h1 className="text-4xl mb-[10px] font-semibold">Login Now</h1>
+        <div>
+          <p className="text-gray-400">
+          Don't have an account?{" "}
+            <Link to="/register" className="text-[#61DBFB] hover:underline">
+              Register
+            </Link>
+          </p>
+        </div>
+        <hr className="opacity-30 h-[1px] w-[100%] mb-5" />
         <input
           onChange={(e) => setEmail(e.target.value)}
           value={email}
@@ -113,42 +123,23 @@ export default function LoginPage() {
             Login
           </button>
         </div>
-        <hr className="w-full opacity-30 h-[1px]" />
-        <div className="text-center mt-2">
-          <p className="text-gray-400">
-            Already have an account?{" "}
-            <Link to="/login" className="text-[#61DBFB] hover:underline">
-              Log In
-            </Link>
-          </p>
+        <div className="relative flex justify-center items-center w-full">
+          <hr className="opacity-30 h-[1px] mb-3 w-[40%] mt-5" />
+          <span className="mt-1 bg-black/10 px-1 rounded-lg backdrop-blur-2xl">or</span>
+          <hr className="opacity-30 h-[1px] mb-3 w-[40%] mt-5" />
         </div>
-        <hr className="w-full opacity-30 h-[1px]" />
         <div
           onClick={() => {
             userAuth.googleAuth();
           }}
           className="w-full flex justify-center items-center"
         >
-          <div className="flex items-center gap-[10px] bg-black/20 border-[1px] border-slate-50/20 px-3 py-2 rounded-2xl cursor-pointer">
+          <div className="flex gap-[10px] bg-black/20 border-[1px] border-slate-50/20 px-3 py-2 rounded-2xl cursor-pointer">
             <img className="w-[25px]" src={google} alt="" />
             <h1 className="font-medium">Countinue With Google</h1>
           </div>
         </div>
-
       </form>
-      <ToastContainer
-        position="top-right"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick={false}
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="dark"
-        transition={Bounce}
-      />
     </section>
   );
 }
