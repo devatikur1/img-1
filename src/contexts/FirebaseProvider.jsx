@@ -11,6 +11,7 @@ import {
   orderBy,
   startAfter,
   limit,
+  getDoc,
 } from "firebase/firestore";
 import { dataStore } from "./FireStore";
 import useCheackSame from "../Hooks/useCheackSame";
@@ -103,29 +104,32 @@ export function FirebaseProvider({ children }) {
 
   // Auth state listener
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        let userObj = {
-          name: user.displayName || null,
-          email: user.email, // safer
-          profileImgUrl: user.photoURL || null,
-          atLogged: new Date(),
-          atSignIn: new Date(),
-        };
-        console.log("Logged in:", userObj);
-        console.log("Logged in:", userObj.atLogged.getDay());
-        console.log(user);
-        
-        setCurrentUser(user);
         setLogged(true);
+  
+        try {
+          // dataStore থেকে user data fetch
+          const userData = await dataStore.getUserData(user.uid);
+          if (userData) {
+            setCurrentUser(userData);
+            console.log("User Data from dataStore:", userData);
+          } else {
+            console.log("No user data found in dataStore!");
+          }
+        } catch (error) {
+          console.error("Error fetching user data from dataStore:", error);
+        }
+  
       } else {
-        console.log("No user logged in");
         setCurrentUser(null);
         setLogged(false);
       }
     });
+  
     return () => unsubscribe();
-  }, []);      
+  }, []);
+       
 
   // get api 
   useEffect(() => {

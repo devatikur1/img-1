@@ -108,7 +108,7 @@ export default function SignUpPages() {
   
     // valid হলে submit
     setErr(false);
-    const signInRes = await userAuth.useSignIn(email, password);
+    const signInRes = await userAuth.useSignIn(email, password, username, fullName);
     console.log(signInRes);
   
     if (signInRes === "error") {

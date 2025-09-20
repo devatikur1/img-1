@@ -1,5 +1,11 @@
 import { app } from "./Firebase";
-import { getFirestore, collection, addDoc, getDoc, doc } from "firebase/firestore";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDoc,
+  doc,
+} from "firebase/firestore";
 const fireStore = getFirestore(app);
 
 // store data in database use this obeject dataStore
@@ -24,5 +30,12 @@ export const dataStore = {
       console.log("No such document!");
       return "error";
     }
+  },
+
+  getUserData: async (userId) => {
+    const docRef = doc(fireStore, "users", userId);
+    const docSnap = await getDoc(docRef);
+    console.log(docSnap);
+    return docSnap.data();
   },
 };

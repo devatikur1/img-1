@@ -56,7 +56,7 @@ export default function UploadBox() {
         const newImag = await useAddImageInStorafe(link.rawFile);
         console.log(newImag);
 
-        let IsSubmited = await dataStore.addData("images", {
+        let IsSubmited = await dataStore.addData(["images"], {
           authorEmail: currentUser.email,
           displayName: currentUser.displayName,
           photoUrl: currentUser?.photoURL ?? null,
