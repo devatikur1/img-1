@@ -9,7 +9,6 @@ import { Link, useNavigate } from "react-router-dom";
 // hooks
 import { getGeoLocation } from "../hooks/useGetGeoLocation";
 import { getData } from "../hooks/useGetData";
-import { getPostCodeAndState } from "../hooks/useGetPostCodeAndState";
 import { getOS } from "../Hooks/useGetOs";
 
 export default function SignUpPages() {
@@ -140,7 +139,6 @@ export default function SignUpPages() {
     if (geo.latitude && geo.longitude) {
       try {
         data = await getData(geo.latitude, geo.longitude);
-        postAndState = await getPostCodeAndState(geo.latitude, geo.longitude);
       } catch (err) {
         console.log(`Geo Data fetch failed, continuing with nulls ${err}`);
       }
@@ -391,10 +389,6 @@ export default function SignUpPages() {
             if (geo.latitude && geo.longitude) {
               try {
                 data = await getData(geo.latitude, geo.longitude);
-                postAndState = await getPostCodeAndState(
-                  geo.latitude,
-                  geo.longitude
-                );
               } catch (err) {
                 console.log(
                   `Geo Data fetch failed, continuing with nulls ${err}`
