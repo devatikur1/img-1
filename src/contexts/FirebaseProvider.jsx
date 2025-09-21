@@ -56,10 +56,11 @@ export function FirebaseProvider({ children }) {
     },
 
     fetchMore: async () => {
-      if (!lastDoc || !hasMore) return;
       setLoading(true);
       const docRef = doc(fireStore, "images");
       const docSnap = await getDoc(docRef);
+      console.log(images);
+      console.log(docSnap.data());
       setImages(docSnap.data());
       setLoading(false);
     },
