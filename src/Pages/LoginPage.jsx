@@ -5,10 +5,10 @@ import google from "../assets/google.png";
 import { FirebaseContext } from "../contexts/FirebaseContext";
 import clsx from "clsx";
 import { Link, useNavigate } from "react-router-dom";
-import { getPostCodeAndState } from "../hooks/useGetPostCodeAndState";
-import { getGeoLocation } from "../hooks/useGetGeoLocation";
+import { getPostCodeAndState } from "../Hooks/useGetPostCodeAndState";
+import { getGeoLocation } from "../Hooks/useGetGeoLocation";
 import { getOS } from "../Hooks/useGetOs";
-import { getData } from "../hooks/useGetData";
+import { getData } from "../Hooks/useGetData";
 
 export default function LoginPage() {
   const [err, setErr] = useState(false);

@@ -7,8 +7,8 @@ import clsx from "clsx";
 import { Link, useNavigate } from "react-router-dom";
 
 // hooks
-import { getGeoLocation } from "../hooks/useGetGeoLocation";
-import { getData } from "../hooks/useGetData";
+import { getGeoLocation } from "../Hooks/useGetGeoLocation";
+import { getData } from "../Hooks/useGetData";
 import { getOS } from "../Hooks/useGetOs";
 
 export default function SignUpPages() {
