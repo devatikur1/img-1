@@ -9,11 +9,12 @@ import {
   getDocs,
   query,
   orderBy,
-  startAfter,
   limit,
+  getDoc,
+  doc,
 } from "firebase/firestore";
 import { dataStore } from "./FireStore";
-import {useCheackSame} from "../Hooks/useCheackSame";
+import { CheackSame } from "../Hooks/useCheackSame";
 
 const auth = getAuth(app);
 const fireStore = getFirestore(app);
@@ -57,25 +58,9 @@ export function FirebaseProvider({ children }) {
     fetchMore: async () => {
       if (!lastDoc || !hasMore) return;
       setLoading(true);
-      const q = query(
-        collection(fireStore, "images"),
-        orderBy("uploadTimeFirebase", "desc"),
-        startAfter(lastDoc),
-        limit(20)
-      );
-      const snap = await getDocs(q);
-      if (snap.empty) {
-        setHasMore(false);
-        setLoading(false);
-        return;
-      }
-
-      const items = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      const filteredItems = useCheackSame(images, items, "id")
-      console.log(filteredItems);
-
-      setImages((prev) => [...prev, ...filteredItems]);
-      setLastDoc(snap.docs[snap.docs.length - 1] || null);
+      const docRef = doc(fireStore, "images");
+      const docSnap = await getDoc(docRef);
+      setImages(docSnap.data());
       setLoading(false);
     },
     
@@ -84,24 +69,9 @@ export function FirebaseProvider({ children }) {
   // when upsateData id update then call this funtion
   useEffect(() => {
     fetchImageData.fetchFirst();
+    fetchImageData.fetchMore();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [updateData]);
-
-  // scroll base data add
-  useEffect(() => {
-    const handleScroll = () => {
-      if (
-        window.innerHeight + window.scrollY >=
-        document.body.offsetHeight - 200
-      ) {
-        if (!loading && hasMore) fetchImageData.fetchMore();
-      }
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lastDoc, loading, hasMore]);
 
   // Auth state listener
   useEffect(() => {
@@ -130,7 +100,6 @@ export function FirebaseProvider({ children }) {
   
     return () => unsubscribe();
   }, []);
-       
 
   // get api 
   useEffect(() => {
@@ -152,7 +121,7 @@ export function FirebaseProvider({ children }) {
     const formData = new FormData();
     formData.append("image", file);
 
-    console.log(key);
+    // console.log(key);
 
     const res = await fetch(`https://api.imgbb.com/1/upload?key=${key}`, {
       method: "POST",
@@ -160,7 +129,7 @@ export function FirebaseProvider({ children }) {
     });
 
     const data = await res.json();
-    console.log(data);
+    // console.log(data);
     return data?.data?.url;
   };
 

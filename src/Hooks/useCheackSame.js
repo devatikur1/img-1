@@ -1,4 +1,4 @@
-export function useCheackSame(parent, child, same) {
+export function CheackSame(parent, child, same) {
   let filteredParent = parent.filter((par) =>
     child.some((cld) => par[same] !== cld[same])
   );
