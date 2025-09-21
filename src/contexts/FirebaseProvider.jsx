@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { FirebaseContext } from "./FirebaseContext";
 import { app } from "./Firebase";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { userAuth } from './FirebaseAuth';
+import { userAuth } from "./FirebaseAuth";
 import {
   collection,
   getFirestore,
@@ -37,7 +37,6 @@ export function FirebaseProvider({ children }) {
 
   const [logged, setLogged] = useState(false);
 
-
   // fetchImageData funtion database thke image data ane
   const fetchImageData = {
     fetchFirst: async () => {
@@ -59,27 +58,29 @@ export function FirebaseProvider({ children }) {
       setLoading(true);
       const docRef = doc(fireStore, "images");
       const docSnap = await getDoc(docRef);
-      console.log(images);
       console.log(docSnap.data());
       setImages(docSnap.data());
       setLoading(false);
     },
-    
   };
 
   // when upsateData id update then call this funtion
   useEffect(() => {
     fetchImageData.fetchFirst();
     fetchImageData.fetchMore();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [updateData]);
+
+  useEffect(() => {
+    console.log(images);
+  }, [images]);
 
   // Auth state listener
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setLogged(true);
-  
+
         try {
           // dataStore থেকে user data fetch
           const userData = await dataStore.getUserData(user.uid);
@@ -92,24 +93,22 @@ export function FirebaseProvider({ children }) {
         } catch (error) {
           console.error("Error fetching user data from dataStore:", error);
         }
-  
       } else {
         setCurrentUser(null);
         setLogged(false);
       }
     });
-  
+
     return () => unsubscribe();
   }, []);
 
-  // get api 
+  // get api
   useEffect(() => {
     (async () => {
       let key = await dataStore.getApiKey();
       setKey(key);
     })();
   }, []);
-  
 
   // emni..
   useEffect(() => {
@@ -136,7 +135,6 @@ export function FirebaseProvider({ children }) {
 
   // handlefils
   async function handleFiles(files) {
-  
     // Convert files to an array of objects
     const filesArr = Array.from(files).map((file) => ({
       imgurl: URL.createObjectURL(file),
