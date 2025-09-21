@@ -45,7 +45,7 @@ export function FirebaseProvider({ children }) {
       const q = query(
         collection(fireStore, "images"),
         orderBy("uploadTimeFirebase", "desc"),
-        limit(20)
+        limit(10)
       );
       const snap = await getDocs(q);
       const items = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
