@@ -10,11 +10,9 @@ import {
   query,
   orderBy,
   limit,
-  getDoc,
-  doc,
+  startAfter,
 } from "firebase/firestore";
 import { dataStore } from "./FireStore";
-import { CheackSame } from "../Hooks/useCheackSame";
 
 const auth = getAuth(app);
 const fireStore = getFirestore(app);
@@ -33,7 +31,10 @@ export function FirebaseProvider({ children }) {
 
   const [logged, setLogged] = useState(false);
 
-  // fetchImageData funtion database thke image data ane
+  // Pagination cursor (শেষ doc ধরে রাখার জন্য)
+  const [lastDoc, setLastDoc] = useState(null);
+
+  // fetchImageData function database থেকে image data আনে
   const fetchImageData = {
     fetchFirst: async () => {
       const q = query(
@@ -42,35 +43,50 @@ export function FirebaseProvider({ children }) {
         limit(80)
       );
       const snap = await getDocs(q);
-      const items = snap.docs.map(doc.data());
+
+      // doc.id যুক্ত করা হচ্ছে
+      const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
       setImages(items);
+      // pagination cursor সেট করা হচ্ছে
+      setLastDoc(snap.docs[snap.docs.length - 1] || null);
     },
 
     fetchMore: async () => {
-      const docRef = doc(fireStore, "images");
-      const docSnap = await getDoc(docRef);
-      console.log(docSnap.data());
-      setImages(docSnap.data());
+      if (!lastDoc) return; // আর লোড করার কিছু নেই
+
+      const q = query(
+        collection(fireStore, "images"),
+        orderBy("uploadTimeFirebase", "desc"),
+        startAfter(lastDoc),
+        limit(80)
+      );
+      const snap = await getDocs(q);
+      const newItems = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+      // আগের + নতুন, ডুপ্লিকেট বাদ দিয়ে
+      setImages((prev) => {
+        const existingIds = new Set(prev.map((item) => item.id));
+        const uniqueNew = newItems.filter((item) => !existingIds.has(item.id));
+        return [...prev, ...uniqueNew];
+      });
+
+      setLastDoc(snap.docs[snap.docs.length - 1] || null);
     },
   };
 
-  // when upsateData id update then call this funtion
+  // যখন updateData আপডেট হবে তখন fetch হবে
   useEffect(() => {
     fetchImageData.fetchFirst();
     fetchImageData.fetchMore();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [updateData]);
 
-  useEffect(() => {
-    console.log(images);
-  }, [images]);
-
   // Auth state listener
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setLogged(true);
-
         try {
           // dataStore থেকে user data fetch
           const userData = await dataStore.getUserData(user.uid);
@@ -92,7 +108,7 @@ export function FirebaseProvider({ children }) {
     return () => unsubscribe();
   }, []);
 
-  // get api
+  // get API key
   useEffect(() => {
     (async () => {
       let key = await dataStore.getApiKey();
@@ -100,18 +116,11 @@ export function FirebaseProvider({ children }) {
     })();
   }, []);
 
-  // emni..
-  useEffect(() => {
-    // console.log(images);
-  }, [images]);
-
   const addImageInStorage = async (file) => {
     if (!file) return;
 
     const formData = new FormData();
     formData.append("image", file);
-
-    // console.log(key);
 
     const res = await fetch(`https://api.imgbb.com/1/upload?key=${key}`, {
       method: "POST",
@@ -119,11 +128,10 @@ export function FirebaseProvider({ children }) {
     });
 
     const data = await res.json();
-    // console.log(data);
     return data?.data?.url;
   };
 
-  // handlefils
+  // handle files
   async function handleFiles(files) {
     // Convert files to an array of objects
     const filesArr = Array.from(files).map((file) => ({
@@ -131,7 +139,6 @@ export function FirebaseProvider({ children }) {
       rawFile: file,
     }));
 
-    // console.log(filesArr);
     setIsUserUploadingImage(true);
     setupimages(filesArr);
   }
@@ -150,15 +157,17 @@ export function FirebaseProvider({ children }) {
         isUserUploadingImage, // uploaded data
         setIsUserUploadingImage, // uploaded funtion
 
-        upimages, // users uploaded image data sate data
-        setupimages, // users uploaded image data sate funtion
+        upimages, // users uploaded image data state data
+        setupimages, // users uploaded image data state funtion
 
         uploading, // user uploading image ?? check this data
         setUploading, // user uploading image ?? check  funtion
 
         setupdateData, // user updateData ?? check this update data funtion
 
-        addImageInStorage, // photo convart funtion
+        addImageInStorage, // photo convert funtion
+
+        fetchImageData, // fetch functions export করে দিচ্ছি
       }}
     >
       {children}
