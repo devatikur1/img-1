@@ -11,10 +11,9 @@ import {
   orderBy,
   startAfter,
   limit,
-  getDoc,
 } from "firebase/firestore";
 import { dataStore } from "./FireStore";
-import useCheackSame from "../Hooks/useCheackSame";
+import {useCheackSame} from "../Hooks/useCheackSame";
 
 const auth = getAuth(app);
 const fireStore = getFirestore(app);
@@ -72,6 +71,7 @@ export function FirebaseProvider({ children }) {
       }
 
       const items = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      // eslint-disable-next-line react-hooks/rules-of-hooks
       const filteredItems = useCheackSame(images, items, "id")
       console.log(filteredItems);
 
@@ -85,6 +85,7 @@ export function FirebaseProvider({ children }) {
   // when upsateData id update then call this funtion
   useEffect(() => {
     fetchImageData.fetchFirst();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [updateData]);
 
   // scroll base data add
@@ -100,6 +101,7 @@ export function FirebaseProvider({ children }) {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lastDoc, loading, hasMore]);
 
   // Auth state listener
@@ -145,32 +147,26 @@ export function FirebaseProvider({ children }) {
     // console.log(images);
   }, [images]);
 
-  const useAddImageInStorafe = async (file) => {
+  const addImageInStorage = async (file) => {
     if (!file) return;
 
     const formData = new FormData();
     formData.append("image", file);
 
     console.log(key);
-    
 
-    const res = await fetch(
-      `https://api.imgbb.com/1/upload?key=${key}`,
-      {
-        method: "POST",
-        body: formData,
-      }
-    );
+    const res = await fetch(`https://api.imgbb.com/1/upload?key=${key}`, {
+      method: "POST",
+      body: formData,
+    });
 
     const data = await res.json();
     console.log(data);
     return data?.data?.url;
   };
 
+  // handlefils
   async function handleFiles(files) {
-
-    // files.filter((file) => console.log(file)
-    // )
   
     // Convert files to an array of objects
     const filesArr = Array.from(files).map((file) => ({
@@ -179,7 +175,6 @@ export function FirebaseProvider({ children }) {
     }));
 
     // console.log(filesArr);
-
     setIsUserUploadingImage(true);
     setupimages(filesArr);
   }
@@ -195,8 +190,8 @@ export function FirebaseProvider({ children }) {
 
         handleFiles,
 
-        isUserUploadingImage,  // uploaded data
-        setIsUserUploadingImage,  // uploaded funtion
+        isUserUploadingImage, // uploaded data
+        setIsUserUploadingImage, // uploaded funtion
 
         upimages, // users uploaded image data sate data
         setupimages, // users uploaded image data sate funtion
@@ -206,7 +201,7 @@ export function FirebaseProvider({ children }) {
 
         setupdateData, // user updateData ?? check this update data funtion
 
-        useAddImageInStorafe // photo convart funtion
+        addImageInStorage, // photo convart funtion
       }}
     >
       {children}

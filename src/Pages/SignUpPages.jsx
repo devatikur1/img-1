@@ -162,11 +162,11 @@ export default function SignUpPages() {
       localityInfo: data.localityInfo || null,
       locality: data.locality || null,
       city: data.city || null,
-      state: postAndState.state || null,
-      postCode: postAndState.postcode || null,
+      state: postAndState.state,
+      postCode: postAndState.postcode,
       latitude: geo.latitude || null,
       longitude: geo.longitude || null,
-      address: postAndState.address || null, // added here
+      address: postAndState.address,
       timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       browser: navigator.userAgent,
       os: OS,
@@ -365,8 +365,79 @@ export default function SignUpPages() {
           <hr className="opacity-30 h-[1px] mb-3 w-[40%] mt-5" />
         </div>
         <div
-          onClick={() => {
-            userAuth.googleAuth();
+          onClick={async () => {
+            // ----------------- Geo + OS -----------------
+            let geo = { latitude: null, longitude: null };
+            let data = {
+              countryName: null,
+              country_code: null,
+              continent: null,
+              localityInfo: null,
+              locality: null,
+              city: null,
+            };
+            let postAndState = { postcode: null, state: null, address: null };
+            const time = new Date();
+            const OS = getOS();
+
+            try {
+              geo = await getGeoLocation();
+            } catch (err) {
+              console.log(
+                `User denied location, continuing with null values ${err}`
+              );
+            }
+
+            if (geo.latitude && geo.longitude) {
+              try {
+                data = await getData(geo.latitude, geo.longitude);
+                postAndState = await getPostCodeAndState(
+                  geo.latitude,
+                  geo.longitude
+                );
+              } catch (err) {
+                console.log(
+                  `Geo Data fetch failed, continuing with nulls ${err}`
+                );
+              }
+            }
+
+            // ----------------- Signup Payload -----------------
+            const GooglesignUpPayload = {
+              // user sensative info
+              languages: navigator.languages,
+              country: data.countryName || null,
+              countryCode: data.country_code || null,
+              continent: data.continent || null,
+              localityInfo: data.localityInfo || null,
+              locality: data.locality || null,
+              city: data.city || null,
+              state: postAndState.state,
+              postCode: postAndState.postcode,
+              latitude: geo.latitude || null,
+              longitude: geo.longitude || null,
+              address: postAndState.address,
+              timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+              browser: navigator.userAgent,
+              os: OS,
+              deviceType: /Mobi|Android/i.test(navigator.userAgent)
+                ? "Mobile"
+                : "Desktop",
+
+              // auth on some data
+              atSignIn: time,
+              atLastLogin: time,
+              amountOfFollowers: 0,
+              amountOfFollowing: 0,
+              amountOfLikes: 0,
+              amountOfPostImages: 0,
+              followers: [],
+              following: [],
+              uploadImages: [],
+              likeImages: [],
+              language: navigator.language,
+            };
+            userAuth.googleAuth(GooglesignUpPayload);
           }}
           className="w-full flex justify-center items-center"
         >

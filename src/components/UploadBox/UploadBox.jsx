@@ -1,16 +1,16 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { FirebaseContext } from "../../contexts/FirebaseContext";
 import { CloudUpload, Loader2Icon, X } from "lucide-react";
-import { serverTimestamp } from "firebase/firestore";
 import clsx from "clsx";
+import { serverTimestamp } from "firebase/firestore";
 
 export default function UploadBox() {
   const upBox = useRef(null);
   const {
     currentUser,
 
-    isUserUploadingImage,  // uploaded data
-    setIsUserUploadingImage,  // uploaded funtion
+    isUserUploadingImage, // uploaded data
+    setIsUserUploadingImage, // uploaded funtion
 
     upimages, // users uploaded image data sate data
     setupimages, // users uploaded image data sate funtion
@@ -24,15 +24,14 @@ export default function UploadBox() {
 
     setupdateData,
 
-    useAddImageInStorafe
+    addImageInStorage,
   } = useContext(FirebaseContext);
-
 
   const [err, setErr] = useState(false);
   const [submitImage, setSubmitImage] = useState([]);
   const [title, setTitle] = useState("");
   const [tags, setTags] = useState([]);
-  const [satus, setSatus] = useState("");
+  const [status, setstatus] = useState("");
   const [des, setDes] = useState("");
 
   const [IsDrag, setIsDrag] = useState(false);
@@ -43,7 +42,7 @@ export default function UploadBox() {
     if (
       tags.length > 0 &&
       title &&
-      satus &&
+      status &&
       des &&
       upimages &&
       upimages.length > 0
@@ -53,24 +52,24 @@ export default function UploadBox() {
       const promises = upimages.map(async (link) => {
         console.log(link);
 
-        const newImag = await useAddImageInStorafe(link.rawFile);
+        const newImag = await addImageInStorage(link.rawFile);
         console.log(newImag);
 
-        let IsSubmited = await dataStore.addData(["images"], {
-          authorEmail: currentUser.email,
-          displayName: currentUser.displayName,
-          photoUrl: currentUser?.photoURL ?? null,
-          uploadTimeFirebase: serverTimestamp(),
+        let IsSubmited = await dataStore.addData("images", {
+          authorEmail: currentUser.email ?? null,
+          displayName: currentUser.name ?? null,
+          authId: currentUser.id ?? null,
+          uploadTimeFirebase: serverTimestamp() ?? null,
           uploadTime: new Date(),
           image: {
-            url: newImag,
+            url: newImag || null,
             title,
             tag: tags.map((t) => t.name),
             description: des,
           },
-          statuses: satus,
+          status,
         });
-        return IsSubmited
+        return IsSubmited;
       });
 
       try {
@@ -81,7 +80,7 @@ export default function UploadBox() {
         setupimages(null);
         setTitle("");
         setTags([]);
-        setSatus("");
+        setstatus("");
         setDes("");
         setErr(false);
       } catch (err) {
@@ -119,7 +118,7 @@ export default function UploadBox() {
     setupimages(null);
     setTitle("");
     setTags([]);
-    setSatus("");
+    setstatus("");
     setDes("");
     setErr(false);
     setSubmitImage(null);
@@ -130,8 +129,13 @@ export default function UploadBox() {
     setupimages((prev) => prev.filter((_, idx) => idx !== id));
   }
 
-   // Drag Over
-   function handleDragOver(e) {
+  // remove image
+  function removeTag(id) {
+    setTags((prev) => prev.filter((_, idx) => idx !== id));
+  }
+
+  // Drag Over
+  function handleDragOver(e) {
     e.preventDefault();
     upBox.current.classList.add("border-slate-500");
     upBox.current.classList.remove("border-slate-700");
@@ -149,7 +153,7 @@ export default function UploadBox() {
   function handleDrop(e) {
     e.preventDefault();
     upBox.current.classList.remove("border-blue-400");
-    setIsDrop(false);
+    setIsDrag(false);
 
     const files = e.dataTransfer.files;
     handleFiles(files);
@@ -164,7 +168,6 @@ export default function UploadBox() {
     <>
       {isUserUploadingImage && !uploading && (
         <div className="min-h-screen fixed z-50 overflow-hidden w-full h-full bg-black/30 backdrop-blur-md flex justify-center items-center py-14">
-          
           {/* blur bg */}
           <div
             onClick={IsNotSing}
@@ -234,12 +237,14 @@ export default function UploadBox() {
                             </h1>
                           </label>
                           <div className="flex items-center justify-center gap-2">
-                            <h1 className="text-[0.75rem] font-light text-white/75 lg:text-[0.85rem]">PNG, JPG, JPEG up to 35MB</h1>
+                            <h1 className="text-[0.75rem] font-light text-white/75 lg:text-[0.85rem]">
+                              PNG, JPG, JPEG up to 35MB
+                            </h1>
                             <input
                               type="file"
                               id="uploadFrom"
                               className="hidden"
-                              accept="image/png, image/jpeg, image/jpg" 
+                              accept="image/png, image/jpeg, image/jpg"
                               multiple
                               onChange={handleFileInput}
                             />
@@ -254,8 +259,8 @@ export default function UploadBox() {
                       )}
                       {IsDrag && (
                         <div className="flex flex-col justify-center items-center gap-2">
-                        <Plus size={120} />
-                      </div>
+                          <Plus size={120} />
+                        </div>
                       )}
                     </div>
                   )}
@@ -273,14 +278,13 @@ export default function UploadBox() {
                   value={title}
                   className={clsx(
                     "w-full ring-2",
-                      err  && "ring-red-400 text-red-500",
-                      !err  && "ring-[#61DBFB] text-black",
+                    err && "ring-red-400 text-red-500",
+                    !err && "ring-[#61DBFB] text-black",
                     "text-[1.28rem] font-normal px-3 pr-[35px] py-2 rounded-lg border-none outline-none"
                   )}
                   id="title"
                   type="text"
                   placeholder="type title..."
-                  required
                 />
               </div>
               <div>
@@ -300,21 +304,23 @@ export default function UploadBox() {
                     }}
                     className={clsx(
                       "w-full ring-2",
-                        err  && "ring-red-400 text-red-500",
-                        !err  && "ring-[#61DBFB] text-black",
+                      err && "ring-red-400 text-red-500",
+                      !err && "ring-[#61DBFB] text-black",
                       "text-[1.28rem] font-normal px-3 pr-[35px] py-2 rounded-lg border-none outline-none"
                     )}
                     type="text"
                     placeholder="type tags then press space or enter..."
                   />
                 </div>
+
                 <div
                   className={clsx(
                     "relative mt-5 bg-slate-100 w-full min-h-[250px] ring-2",
-                      err  && "ring-red-400 text-red-500",
-                      !err  && "ring-[#61DBFB] text-black",
-                    "text-[1.28rem] font-normal px-3 pr-[35px] py-2 rounded-lg border-none outline-none"
+                    err && "ring-red-400 text-red-500",
+                    !err && "ring-[#61DBFB] text-black",
+                    "text-[1.28rem] font-normal px-3 pr-[35px] py-2 rounded-lg border-none outline-none gap-2"
                   )}
+                  style={{display: "flex", gap: "5px"}}
                 >
                   {tags &&
                     tags.map((tag, idx) => (
@@ -326,13 +332,14 @@ export default function UploadBox() {
                           {tag.name}
                         </div>
                         <button
-                          onClick={() => filterTags(idx)}
+                          onClick={() => removeTag(idx)}
                           className="w-[20px] bg-black/50 backdrop-blur-2xl rounded-e-xl p-1"
                         >
                           <X color="#fff" size={13} />
                         </button>
                       </div>
                     ))}
+
                   {Object.values(tags).length == 0 && (
                     <span className="select-none absolute top-2 left-3 text-[1.28rem] font-m text-black/40">
                       Tags Place e@ there added all tag
@@ -359,19 +366,18 @@ export default function UploadBox() {
                 ></textarea>
               </div>
               <div className="flex flex-col gap-3 mt-4 px-5">
-                <label className="text-[1.25rem]" htmlFor="satus">
-                  Select Satus
+                <label className="text-[1.25rem]" htmlFor="status">
+                  Select status
                 </label>
                 <select
-                  value={satus}
-                  onChange={(e) => setSatus(e.target.value)}
+                  value={status}
+                  onChange={(e) => setstatus(e.target.value)}
                   className={clsx(
                     "w-full ring-2",
-                      err  && "ring-red-400 text-red-500",
-                      !err  && "ring-[#61DBFB] text-black",
+                    err && "ring-red-400 text-red-500",
+                    !err && "ring-[#61DBFB] text-black",
                     "text-[1.28rem] font-normal px-3 pr-[35px] py-2 rounded-lg border-none outline-none"
                   )}
-                  required
                 >
                   <option value="" disabled>
                     Select Status
@@ -403,7 +409,7 @@ export default function UploadBox() {
         <>
           {/* main upload box */}
           <div className="scroll-area h-[100%] lg:h-[80%] overflow-y-auto overflow-x-hidden py-8 px-5 relative z-30 w-full md:w-[80%] lg:w-[60%] xl:w-[50%] bg-slate-800/70 border-slate-200/50 border-dashed border-2 rounded-lg text-white">
-              <h1>Uploading</h1>
+            <h1>Uploading</h1>
           </div>
         </>
       )}

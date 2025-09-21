@@ -35,7 +35,6 @@ export const dataStore = {
   getUserData: async (userId) => {
     const docRef = doc(fireStore, "users", userId);
     const docSnap = await getDoc(docRef);
-    console.log(docSnap);
     return docSnap.data();
   },
 };

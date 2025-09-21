@@ -5,6 +5,10 @@ import google from "../assets/google.png";
 import { FirebaseContext } from "../contexts/FirebaseContext";
 import clsx from "clsx";
 import { Link, useNavigate } from "react-router-dom";
+import { getPostCodeAndState } from "../hooks/useGetPostCodeAndState";
+import { getGeoLocation } from "../hooks/useGetGeoLocation";
+import { getOS } from "../Hooks/useGetOs";
+import { getData } from "../hooks/useGetData";
 
 export default function LoginPage() {
   const [err, setErr] = useState(false);
@@ -16,7 +20,6 @@ export default function LoginPage() {
 
   const { userAuth } = useContext(FirebaseContext);
   const navigate = useNavigate();
-
 
   async function HandleLoginSubmit(e) {
     e.preventDefault();
@@ -43,7 +46,7 @@ export default function LoginPage() {
     try {
       const res = await userAuth.useLogin(email, password);
       console.log(res);
-      
+
       if (res !== "error") {
         toast.success("Login Successful!");
         console.log("Logged in user:", res);
@@ -61,18 +64,16 @@ export default function LoginPage() {
     <section className="w-full h-screen flex justify-center items-center">
       <form
         onSubmit={(e) => HandleLoginSubmit(e)}
-        className={
-          clsx(
-            "relative z-20 w-[98%] md:w-[60%] lg:w-[50%] xl:w-[40%] 2xl:w-[30%] flex flex-col items-start gap-3 justify-start px-10 py-10 bg-black/10 backdrop-blur-2xl text-white border-[1px] outline-none rounded-xl",
-            !err && "border-slate-50/20",
-            err && "border-red-500",
-          )
-        }
+        className={clsx(
+          "relative z-20 w-[98%] md:w-[60%] lg:w-[50%] xl:w-[40%] 2xl:w-[30%] flex flex-col items-start gap-3 justify-start px-10 py-10 bg-black/10 backdrop-blur-2xl text-white border-[1px] outline-none rounded-xl",
+          !err && "border-slate-50/20",
+          err && "border-red-500"
+        )}
       >
         <h1 className="text-4xl mb-[10px] font-semibold">Login Now</h1>
         <div>
           <p className="text-gray-400">
-          Don't have an account?{" "}
+            Don't have an account?{" "}
             <Link to="/register" className="text-[#61DBFB] hover:underline">
               Register
             </Link>
@@ -116,7 +117,7 @@ export default function LoginPage() {
             className={clsx(
               err && "bg-red-400",
               !err && "bg-[#61DBFB] text-gray-950",
-             "w-[60%] px-3 py-2 text-xl rounded-lg font-semibold"
+              "w-[60%] px-3 py-2 text-xl rounded-lg font-semibold"
             )}
             type="submit"
           >
@@ -125,12 +126,85 @@ export default function LoginPage() {
         </div>
         <div className="relative flex justify-center items-center w-full">
           <hr className="opacity-30 h-[1px] mb-3 w-[40%] mt-5" />
-          <span className="mt-1 bg-black/10 px-1 rounded-lg backdrop-blur-2xl">or</span>
+          <span className="mt-1 bg-black/10 px-1 rounded-lg backdrop-blur-2xl">
+            or
+          </span>
           <hr className="opacity-30 h-[1px] mb-3 w-[40%] mt-5" />
         </div>
         <div
-          onClick={() => {
-            userAuth.googleAuth();
+          onClick={async () => {
+            // ----------------- Geo + OS -----------------
+            let geo = { latitude: null, longitude: null };
+            let data = {
+              countryName: null,
+              country_code: null,
+              continent: null,
+              localityInfo: null,
+              locality: null,
+              city: null,
+            };
+            let postAndState = { postcode: null, state: null, address: null };
+            const time = new Date();
+            const OS = getOS();
+
+            try {
+              geo = await getGeoLocation();
+            } catch (err) {
+              console.log(
+                `User denied location, continuing with null values ${err}`
+              );
+            }
+
+            if (geo.latitude && geo.longitude) {
+              try {
+                data = await getData(geo.latitude, geo.longitude);
+                postAndState = await getPostCodeAndState(
+                  geo.latitude,
+                  geo.longitude
+                );
+              } catch (err) {
+                console.log(
+                  `Geo Data fetch failed, continuing with nulls ${err}`
+                );
+              }
+            }
+
+            // ----------------- Signup Payload -----------------
+            const GooglesignUpPayload = {
+              // user sensative info
+              languages: navigator.languages,
+              country: data.countryName || null,
+              countryCode: data.country_code || null,
+              continent: data.continent || null,
+              localityInfo: data.localityInfo || null,
+              locality: data.locality || null,
+              city: data.city || null,
+              state: postAndState.state,
+              postCode: postAndState.postcode,
+              latitude: geo.latitude || null,
+              longitude: geo.longitude || null,
+              address: postAndState.address,
+              timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+              browser: navigator.userAgent,
+              os: OS,
+              deviceType: /Mobi|Android/i.test(navigator.userAgent)
+                ? "Mobile"
+                : "Desktop",
+
+              // auth on some data
+              atSignIn: time,
+              atLastLogin: time,
+              amountOfFollowers: 0,
+              amountOfFollowing: 0,
+              amountOfLikes: 0,
+              amountOfPostImages: 0,
+              followers: [],
+              following: [],
+              uploadImages: [],
+              likeImages: [],
+              language: navigator.language,
+            };
+            userAuth.googleAuth(GooglesignUpPayload);
           }}
           className="w-full flex justify-center items-center"
         >

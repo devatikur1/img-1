@@ -12,7 +12,10 @@ import {
   doc,
   setDoc,
   serverTimestamp,
-  // getDoc,
+  collection,
+  query,
+  where,
+  getDocs,
 } from "firebase/firestore";
 
 const auth = getAuth(app);
@@ -24,7 +27,7 @@ export const userAuth = {
     try {
       const loginRes = await signInWithEmailAndPassword(auth, email, password);
       const user = loginRes.user;
-
+      
       const userRef = doc(fireStore, "users", user.uid);
       await setDoc(
         userRef,
@@ -40,7 +43,11 @@ export const userAuth = {
 
   useSignIn: async (email, password, signUpPayload) => {
     try {
-      const signRes = await createUserWithEmailAndPassword(auth, email, password);
+      const signRes = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
       const user = signRes.user;
       const userRef = doc(fireStore, "users", user.uid);
 
@@ -59,10 +66,30 @@ export const userAuth = {
     }
   },
 
-  googleAuth: async () => {
+  googleAuth: async (GooglesignUpPayload) => {
     try {
       const googleRes = await signInWithPopup(auth, googleProvider);
       const user = googleRes.user;
+
+      let baseName = user.displayName
+        ? user.displayName.replace(/\s+/g, "").toLowerCase()
+        : user.email.split("@")[0].toLowerCase();
+
+      let username;
+
+      while (true) {
+        const randomNum = Math.floor(100 + Math.random() * 900);
+        username = `${baseName}${randomNum}`;
+
+        const q = query(
+          collection(fireStore, "users"),
+          where("username", "==", username)
+        );
+        const snapshot = await getDocs(q);
+        if (snapshot.empty) break;
+      }
+
+      console.log("Saving user with username:", username);
 
       const userRef = doc(fireStore, "users", user.uid);
       await setDoc(
@@ -72,8 +99,10 @@ export const userAuth = {
           name: user.displayName,
           email: user.email,
           profileImgUrl: user.photoURL,
+          username,
           atSignIn: serverTimestamp(),
           atLastLogin: serverTimestamp(),
+          ...GooglesignUpPayload,
         },
         { merge: true }
       );
