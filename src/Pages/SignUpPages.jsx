@@ -144,8 +144,6 @@ export default function SignUpPages() {
       }
     }
 
-    
-
     // ----------------- Signup Payload -----------------
     const signUpPayload = {
       // user info in auth
