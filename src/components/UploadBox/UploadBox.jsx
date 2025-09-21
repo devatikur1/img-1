@@ -323,7 +323,7 @@ export default function UploadBox() {
                     !err && "ring-[#61DBFB] text-black",
                     "text-[1.28rem] font-normal px-3 pr-[35px] py-2 rounded-lg border-none outline-none gap-2"
                   )}
-                  style={{display: "flex", gap: "5px"}}
+                  style={{display: "flex", alignItems: "start", flexWrap: "wrap", gap: "5px"}}
                 >
                   {tags &&
                     tags.map((tag, idx) => (
