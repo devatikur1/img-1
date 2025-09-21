@@ -42,7 +42,7 @@ export function FirebaseProvider({ children }) {
         limit(80)
       );
       const snap = await getDocs(q);
-      const items = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      const items = snap.docs.map(doc.data());
       setImages(items);
     },
 
