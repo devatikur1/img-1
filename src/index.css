@@ -62,13 +62,15 @@ body {
   transition: all 0.3s ease;
 }
 .parent_optionBox .optionBox{
-  display: none;
+  transform: translateX(80);
+  transition: all 0.3s ease;
 }
 
 .parent_optionBox:hover .optionBox {
-  display: flex;
+  transform: translateX(0);
   padding: 25px 20px;
 }
+
 
 
 div img.profilePic {
@@ -124,11 +126,5 @@ a.sideOption.active::after {
 
   .parent_optionBox:hover .optionBox {
     display: none; /* মোবাইলে hover থাকবে না তাই flex দরকার নেই */
-    padding: 25px 20px;
   }
-}
-
-.orAbsolate {
-  position: absolute;
-  background-color: #111;
 }

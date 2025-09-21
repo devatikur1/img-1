@@ -71,7 +71,6 @@ export function FirebaseProvider({ children }) {
       }
 
       const items = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      // eslint-disable-next-line react-hooks/rules-of-hooks
       const filteredItems = useCheackSame(images, items, "id")
       console.log(filteredItems);
 

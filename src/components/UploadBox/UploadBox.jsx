@@ -17,6 +17,8 @@ export default function UploadBox() {
 
     handleFiles,
 
+    logged,
+
     dataStore, // store data
 
     uploading, // user uploading image ?? check this data
@@ -40,6 +42,7 @@ export default function UploadBox() {
   async function handleSubmit(e) {
     e.preventDefault();
     if (
+      logged &&
       tags.length > 0 &&
       title &&
       status &&
@@ -57,7 +60,7 @@ export default function UploadBox() {
 
         let IsSubmited = await dataStore.addData("images", {
           authorEmail: currentUser.email ?? null,
-          displayName: currentUser.name ?? null,
+          displayName: currentUser.name,
           authId: currentUser.id ?? null,
           uploadTimeFirebase: serverTimestamp() ?? null,
           uploadTime: new Date(),

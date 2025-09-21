@@ -1,4 +1,3 @@
-"use client";
 import React, { useContext, useState, useEffect } from "react";
 import clsx from "clsx";
 import { FirebaseContext } from "../../contexts/FirebaseContext";
@@ -61,7 +60,7 @@ export default function ImageFeed() {
         <div
           key={file.id}
           className={clsx(
-            "relative parent_optionBox bg-border5 border-border backdrop-blur-lg sm:p-2 w-full flex-col items-center my-5 cursor-pointer rounded-lg overflow-hidden *:select-none",
+            "relative bg-border5 border-border backdrop-blur-lg sm:p-2 w-full flex-col items-center my-5 cursor-pointer rounded-lg overflow-hidden *:select-none",
             file.status === "public" ? "flex" : "hidden"
           )}
         >
@@ -78,12 +77,15 @@ export default function ImageFeed() {
                 <img
                   loading="lazy"
                   className="w-[30px] h-[30px] object-cover rounded-full"
-                  src={profiles[file.authId] || "/default-avatar.jpg"}
+                  src={
+                    profiles[file.authId] || "/src/assets/emptyProfileImg.svg"
+                  }
                   alt="profile"
                 />
-                <p className="text-[1rem] font-semibold">{file.name}</p>
+                <p className="text-[1rem] font-semibold">{file.displayName}</p>
               </div>
               <div
+                className="parent_optionBox"
                 onClick={() =>
                   setShowOption(showOption === file.id ? null : file.id)
                 }
@@ -93,13 +95,37 @@ export default function ImageFeed() {
             </div>
           </div>
 
+          <div className="bg-gradient-to-b from-transparent via-transparent to-black absolute bottom-0 flex flex-row-reverse w-full px-2 pb-5 h-full justify-between">
+            <div className="flex items-end">
+              <div
+                className="parent_optionBox"
+                onClick={() =>
+                  setShowOption(showOption === file.id ? null : file.id)
+                }
+              >
+                <EllipsisVertical size={20} />
+              </div>
+            </div>
+            <div className="flex items-end gap-2 pl-1">
+              <img
+                loading="lazy"
+                className="w-[30px] h-[30px] object-cover rounded-full"
+                src={profiles[file.authId] || "/src/assets/emptyProfileImg.svg"}
+                alt="profile"
+              />
+              <p className="text-[1rem] font-semibold">
+                {file.displayName || "Unkonw user"}
+              </p>
+            </div>
+          </div>
+
           <div
             className={clsx(
               showOption === file.id ? "show" : "hidden",
-              "bg-black/50 rounded-xl backdrop-blur-md px-2 py-2 absolute right-0 top-0 bottom-10 md:top-[25%] md:bottom-0 w-full h-[75%] z-40"
+              "optionBox bg-black/50 rounded-xl backdrop-blur-md px-2 py-2 absolute right-0 top-0 bottom-10 w-full h-[75%] z-40"
             )}
           >
-            <ul className="flex flex-col gap-2">
+            <ul className="flex flex-col gap-2 w-full">
               <li className="rounded-lg flex justify-start items-center cursor-pointer px-2 py-[0.2rem] md:hover:bg-[#61DBFB] md:hover:text-black">
                 Info
               </li>

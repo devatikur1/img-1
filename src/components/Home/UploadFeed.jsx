@@ -8,7 +8,7 @@ export default function UploadFeed() {
   const [IsDrag, setIsDrag] = useState(null);
   const [IsUpload, setIsUpload] = useState(null);
 
-  const { handleFiles, uploading } = useContext(FirebaseContext);
+  const { handleFiles, uploading, logged } = useContext(FirebaseContext);
 
   // Drag Over
   function handleDragOver(e) {
@@ -60,8 +60,11 @@ export default function UploadFeed() {
   
   return (
     <div style={{ paddingBottom: "20px" }} className="w-full">
-      {/* when Uploading */}
-      {(uploading || IsUpload) && (
+      {/* Show upload section only if user is logged in */}
+      {logged && (
+        <>
+          {/* when Uploading */}
+          {(uploading || IsUpload) && (
         <section className="mt-20 w-full h-[250px] flex flex-col items-center gap-6 justify-center">
           <div className="bg-slate-800/70 border-slate-700 w-[90%] xl:w-[40%] mt-20 h-[250px] flex flex-col justify-center items-center gap-[10px] border-dashed border-[1px] border-slate-50/60 rounded-xl py-40 transition-colors duration-200 overflow-hidden">
             <div className="w-full h-full flex justify-center items-center">
@@ -123,6 +126,8 @@ export default function UploadFeed() {
             )}
           </div>
         </section>
+      )}
+        </>
       )}
     </div>
   );
