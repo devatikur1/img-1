@@ -23,10 +23,6 @@ export function FirebaseProvider({ children }) {
   const [currentUser, setCurrentUser] = useState({});
   const [key, setKey] = useState("");
 
-  // get data state
-  const [lastDoc, setLastDoc] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [images, setImages] = useState([]);
 
@@ -40,27 +36,21 @@ export function FirebaseProvider({ children }) {
   // fetchImageData funtion database thke image data ane
   const fetchImageData = {
     fetchFirst: async () => {
-      setLoading(true);
       const q = query(
         collection(fireStore, "images"),
         orderBy("uploadTimeFirebase", "desc"),
-        limit(10)
+        limit(80)
       );
       const snap = await getDocs(q);
       const items = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       setImages(items);
-      setLastDoc(snap.docs[snap.docs.length - 1] || null);
-      setLoading(false);
-      if (snap.empty) setHasMore(false);
     },
 
     fetchMore: async () => {
-      setLoading(true);
       const docRef = doc(fireStore, "images");
       const docSnap = await getDoc(docRef);
       console.log(docSnap.data());
       setImages(docSnap.data());
-      setLoading(false);
     },
   };
 
