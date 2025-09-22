@@ -128,6 +128,8 @@ export function FirebaseProvider({ children }) {
     });
 
     const data = await res.json();
+    console.log(data);
+    
     return data?.data?.url;
   };
 
