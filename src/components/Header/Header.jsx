@@ -66,6 +66,7 @@ export default function Header() {
           <input
             onChange={(e) => handleFileInput(e)}
             className="hidden"
+            accept="image/png, image/jpeg, image/jpg"
             type="file"
             id="upfile"
           />
