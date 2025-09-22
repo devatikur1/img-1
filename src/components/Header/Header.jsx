@@ -12,15 +12,15 @@ export default function Header() {
 
   // file uploaded images
   function handleFileInput(e) {
-      const files = e.target.files;
-      let mainFile = Array.from(files).filter((file) => file.size < 32000000);
-      console.log(mainFile);
-      if (mainFile.length == 0) {
-        toast.error("Please upload image up to 35MB");
-        return;
-      }
-      handleFiles(mainFile);
+    const files = e.target.files;
+    let mainFile = Array.from(files).filter((file) => file.size < 32000000);
+    console.log(mainFile);
+    if (mainFile.length == 0) {
+      toast.error("Please upload image up to 35MB");
+      return;
     }
+    handleFiles(mainFile);
+  }
 
   return (
     <header className="shadow-primary-lg h-[62px] flex justify-between items-center fixed top-0 left-0 right-0 z-30 w-full bg-background backdrop-blur-2xl border-b-[2px] border-b-[#4953b2] py-2 px-3">
@@ -66,7 +66,7 @@ export default function Header() {
           <input
             onChange={(e) => handleFileInput(e)}
             className="hidden"
-            accept="image/png, image/jpeg, image/jpg"
+            accept="image/png, image/jpeg, image/jpg, image/WEBP, image/webp"
             type="file"
             id="upfile"
           />

@@ -1,8 +1,9 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { FirebaseContext } from "../../contexts/FirebaseContext";
-import { CloudUpload, Loader2Icon, X } from "lucide-react";
+import { CloudUpload, Loader, Loader2Icon, Plus, X } from "lucide-react";
 import clsx from "clsx";
 import { serverTimestamp } from "firebase/firestore";
+import { toast } from "react-toastify";
 
 export default function UploadBox() {
   const upBox = useRef(null);
@@ -157,15 +158,26 @@ export default function UploadBox() {
     e.preventDefault();
     upBox.current.classList.remove("border-blue-400");
     setIsDrag(false);
-
     const files = e.dataTransfer.files;
-    handleFiles(files);
+    let mainFile = Array.from(files).filter((file) => file.size < 32000000);
+    console.log(mainFile);
+    if (mainFile.length == 0) {
+      toast.error("Please upload image up to 35MB");
+      return;
+    }
+    handleFiles(mainFile);
   }
 
   // file uploaded images
   function handleFileInput(e) {
     const files = e.target.files;
-    handleFiles(files);
+    let mainFile = Array.from(files).filter((file) => file.size < 32000000);
+    console.log(mainFile);
+    if (mainFile.length == 0) {
+      toast.error("Please upload image up to 35MB");
+      return;
+    }
+    handleFiles(mainFile);
   }
   return (
     <>
@@ -241,13 +253,13 @@ export default function UploadBox() {
                           </label>
                           <div className="flex items-center justify-center gap-2">
                             <h1 className="text-[0.75rem] font-light text-white/75 lg:text-[0.85rem]">
-                              PNG, JPG, JPEG up to 35MB
+                              PNG, JPG, JPEG, webp up to 35MB
                             </h1>
                             <input
                               type="file"
                               id="uploadFrom"
                               className="hidden"
-                              accept="image/png, image/jpeg, image/jpg"
+                              accept="image/png, image/jpeg, image/jpg, image/WEBP, image/webp"
                               multiple
                               onChange={handleFileInput}
                             />
@@ -323,7 +335,12 @@ export default function UploadBox() {
                     !err && "ring-[#61DBFB] text-black",
                     "text-[1.28rem] font-normal px-3 pr-[35px] py-2 rounded-lg border-none outline-none gap-2"
                   )}
-                  style={{display: "flex", alignItems: "start", flexWrap: "wrap", gap: "5px"}}
+                  style={{
+                    display: "flex",
+                    alignItems: "start",
+                    flexWrap: "wrap",
+                    gap: "5px",
+                  }}
                 >
                   {tags &&
                     tags.map((tag, idx) => (
@@ -411,8 +428,17 @@ export default function UploadBox() {
       {isUserUploadingImage && uploading && (
         <>
           {/* main upload box */}
-          <div className="scroll-area h-[100%] lg:h-[80%] overflow-y-auto overflow-x-hidden py-8 px-5 relative z-30 w-full md:w-[80%] lg:w-[60%] xl:w-[50%] bg-slate-800/70 border-slate-200/50 border-dashed border-2 rounded-lg text-white">
-            <h1>Uploading</h1>
+          <div className="min-h-screen fixed z-50 overflow-hidden w-full h-full bg-black/30 backdrop-blur-md py-14 flex justify-center items-center">
+            {/* blur bg */}
+            <div
+              onClick={IsNotSing}
+              className="w-screen h-screen absolute z-20"
+            ></div>
+            <div className="flex justify-center items-center scroll-area h-[100%] lg:h-[80%] overflow-y-auto overflow-x-hidden py-8 px-5 relative z-30 w-full md:w-[80%] lg:w-[60%] xl:w-[50%] bg-slate-800/70 border-slate-200/50 border-dashed border-2 rounded-lg text-white">
+              <div className="animate-spin">
+                <Loader size={200} />
+              </div>
+            </div>
           </div>
         </>
       )}
