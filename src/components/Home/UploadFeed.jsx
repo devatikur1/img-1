@@ -1,7 +1,7 @@
 import React, { useContext, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { FirebaseContext } from "../../contexts/FirebaseContext";
-import { Loader, CloudUpload, Plus } from "lucide-react";
+import { Loader, CloudUpload, Plus, PlusIcon } from "lucide-react";
 
 export default function UploadFeed() {
   const upBox = useRef(null);
@@ -121,7 +121,7 @@ export default function UploadFeed() {
             {/* when is drag true */}
             {IsDrag && (
               <div className="flex flex-col justify-center items-center gap-2">
-                <Plus size={120} />
+                <PlusIcon size={120} />
               </div>
             )}
           </div>
