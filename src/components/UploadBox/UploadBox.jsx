@@ -59,13 +59,13 @@ export default function UploadBox() {
         console.log(newImag);
 
         let IsSubmited = await dataStore.addData("images", {
-          authorEmail: currentUser.email ?? null,
+          authorEmail: currentUser.email,
           displayName: currentUser.name,
-          authId: currentUser.id ?? null,
-          uploadTimeFirebase: serverTimestamp() ?? null,
+          authId: currentUser.id,
+          uploadTimeFirebase: serverTimestamp(),
           uploadTime: new Date(),
           image: {
-            url: newImag || null,
+            url: newImag,
             title,
             tag: tags.map((t) => t.name),
             description: des,
