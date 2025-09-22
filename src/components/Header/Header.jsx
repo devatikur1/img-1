@@ -1,13 +1,14 @@
 import React, { useContext } from "react";
 import emptyProfileImg from "../../assets/emptyProfileImg.svg";
-import { Upload } from "lucide-react";
+import { LogOut, Upload } from "lucide-react";
 import { FirebaseContext } from "../../contexts/FirebaseContext";
 import { Link, NavLink } from "react-router-dom";
 import Logo from "./Logo";
 import { toast } from "react-toastify";
 
 export default function Header() {
-  const { currentUser, logged, handleFiles } = useContext(FirebaseContext);
+  const { currentUser, logged, handleFiles, userAuth } =
+    useContext(FirebaseContext);
   // console.table(currentUser);
 
   // file uploaded images
@@ -58,28 +59,65 @@ export default function Header() {
           </NavLink>
         </ul>
       </div>
-      {logged && currentUser && (
-        <div className="flex items-center gap-[20px]">
-          <label htmlFor="upfile">
-            <Upload />
-          </label>
-          <input
-            onChange={(e) => handleFileInput(e)}
-            className="hidden"
-            accept="image/png, image/jpeg, image/jpg, image/WEBP, image/webp"
-            type="file"
-            id="upfile"
-          />
 
-          <button className="border-2 border-[#7d97f4] shadow-primary-lg rounded-full">
-            <img
-              className="w-[45px] rounded-full"
-              src={currentUser?.profileImgUrl || emptyProfileImg}
-              alt={currentUser?.name || "User"}
+      <div className="flex items-center gap-[20px]">
+        {logged && currentUser && (
+          <>
+            <label
+              className="flex gap-1 p-2 py-0.5 rounded-md bg-black/20 ring-1 ring-gray-100/20 pointer-events-auto *:select-none"
+              htmlFor="upfile"
+            >
+              <Upload />
+              <span className="select-none">Upload</span>{" "}
+            </label>
+
+            <input
+              onChange={(e) => handleFileInput(e)}
+              className="hidden"
+              accept="image/png, image/jpeg, image/jpg, image/WEBP, image/webp"
+              type="file"
+              id="upfile"
             />
-          </button>
-        </div>
-      )}
+          </>
+        )}
+        {!logged && !currentUser && (
+          <>
+            <label
+              className="flex gap-1 p-2 py-0.5 rounded-md bg-black/20 ring-1 ring-gray-100/20 pointer-events-auto *:select-none"
+              htmlFor="upfile"
+            >
+              <Upload />
+              <span className="select-none">Upload</span>{" "}
+            </label>
+
+            <input
+              onChange={() => toast.error("Pls login")}
+              className="hidden"
+              accept="image/png, image/jpeg, image/jpg, image/WEBP, image/webp"
+              type="file"
+              id="upfile"
+            />
+          </>
+        )}
+        {logged && currentUser && (
+          <>
+            <button
+              onClick={() => userAuth.logout()}
+              className="flex gap-1 p-2 py-0.5 rounded-md bg-black/20 ring-1 ring-gray-100/20"
+            >
+              <LogOut />
+              <span>log Out</span>
+            </button>
+            <button className="border-2 border-[#7d97f4] shadow-primary-lg rounded-full">
+              <img
+                className="w-[45px] rounded-full"
+                src={currentUser?.profileImgUrl || emptyProfileImg}
+                alt={currentUser?.name || "User"}
+              />
+            </button>
+          </>
+        )}
+      </div>
     </header>
   );
 }
